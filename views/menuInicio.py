@@ -1,80 +1,100 @@
-from dearpygui.dearpygui import *
-from registry            import * 
 import os 
+PATH     = os.path.dirname( __file__ ).removesuffix('views')
+PATH_IMG = PATH + 'img\\'
 
-PATH      = os.path.dirname( __file__ ).removesuffix('views')
-PATH_IMG  = PATH + 'img\\'
+import sys 
+sys.path.insert(0, PATH )
 
-def hover_buttons_IN ( sender , data, user     ) :
-    if   user == "Visualização geral"  :
-        configure_item( 1_3_1, default_value = user )
-    elif user == "Posição do sol"      :
-        configure_item( 1_3_1, default_value = user )
-    elif user == "Atuadores"           :
-        configure_item( 1_3_1, default_value = user )
-    elif user == "Atuação da base"     :
-        configure_item( 1_3_1, default_value = user )
-    elif user == "Atuação da elevação" :
-        configure_item( 1_3_1, default_value = user )
-    elif user == "Configurações"       :
-        configure_item( 1_3_1, default_value = user )
+import dearpygui.dearpygui as dpg 
+from   functions import add_image_loaded
+from   themes import *
 
-def resize_inicio    ( w : int,   h : int      ) -> bool :
-    configure_item( 1_1 , width = w-15     , height = h*3/10    , pos = [ 10       , 25             ] )
-    configure_item( 1_2 , width = w/3      , height = h*6.60/10 , pos = [ 10       , (h//10)*3 + 20 ] )
-    configure_item( 1_3 , width = w*2/3-20 , height = h*6.60/10 , pos = [ w//3 + 15, (h//10)*3 + 35 ] )
 
-    w_header , h_header  = get_item_width( 1_1 ), get_item_height( 1_1 )
-    w_lateral, h_lateral = get_item_width( 1_2 ), get_item_height( 1_2 )
+# REGISTRIES ESPECIFIC 
+img_fundo = add_image_loaded( PATH_IMG + 'fundo.jpg' )
+img_logo  = add_image_loaded( PATH_IMG + 'JetTowers-Logo.png' )
+img_inic  = add_image_loaded( PATH_IMG + 'init_img\\' + 'inic.png')
+img_posi  = add_image_loaded( PATH_IMG + 'init_img\\' + 'posi.jpg')
+img_atua  = add_image_loaded( PATH_IMG + 'init_img\\' + 'atua.png')
+img_sens  = add_image_loaded( PATH_IMG + 'init_img\\' + 'sens.png')
+img_comu  = add_image_loaded( PATH_IMG + 'init_img\\' + 'comu.jpg') 
+img_conf  = add_image_loaded( PATH_IMG + 'init_img\\' + 'conf.png') 
 
-    configure_item( 1_1_1_0 , width = w_header-16 , height = h_header-16 ) # HEADER 
-    configure_item( 1_1_1_1 , pmin  = (-30,-30), pmax = ( w, round( h*3/10)*2 ))
-    configure_item( 1_1_1_2 , pmin  = (10,10)  , pmax = (350,200) )
+# CALLBACKS 
+def hover_buttons ( handler , data, user ):    
+    if   data == 1_2_11 : dpg.configure_item( 1_3_1_1, texture_tag = img_inic ) 
+    elif data == 1_2_22 : dpg.configure_item( 1_3_1_1, texture_tag = img_posi ) 
+    elif data == 1_2_33 : dpg.configure_item( 1_3_1_1, texture_tag = img_atua ) 
+    elif data == 1_2_44 : dpg.configure_item( 1_3_1_1, texture_tag = img_sens ) 
+    elif data == 1_2_55 : dpg.configure_item( 1_3_1_1, texture_tag = img_comu ) 
+    elif data == 1_2_66 : dpg.configure_item( 1_3_1_1, texture_tag = img_conf ) 
 
-    v_spacing = h_lateral // 7  # LATERAL 
-    configure_item( 1_2_1, width = w//3 - 15, height = v_spacing ) 
-    configure_item( 1_2_2, width = w//3 - 15, height = v_spacing ) 
-    configure_item( 1_2_3, width = w//3 - 15, height = v_spacing ) 
-    configure_item( 1_2_6, width = w//3 - 15, height = v_spacing ) 
-    configure_item( 1_2_7, width = w//3 - 15, height = v_spacing ) 
-    configure_item( 1_2_8, width = w//3 - 15, height = v_spacing )  
+# HANDLER_REGISTERS / THEMES 
+def handlers_and_themes_inicio(): 
+    with dpg.item_handler_registry( ) as handler_hover:
+        dpg.add_item_hover_handler( callback = hover_buttons )
+    dpg.bind_item_handler_registry( item = 1_2_11, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_22, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_33, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_44, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_55, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_66, handler_registry = handler_hover )
 
-def render_inicio    (                         ) -> bool :
-    pass 
+    dpg.bind_item_theme( 1_1, theme_no_win_border)
+    dpg.bind_item_theme( 1_2, theme_no_win_border)
+    dpg.bind_item_theme( 1_3, theme_no_win_border)
 
-def init_inicio      ( windows :dict, callback ) : 
-    with window( label = 'Header' , id = 1_1, pos = [10, 25], no_move  = True , no_close    = True, no_title_bar= True, no_resize= True ) as Header_IN:    
+# MAIN FUNCTIONS 
+def resize_inicio( ):
+    w, h = dpg.get_item_width( 'mainWindow'), dpg.get_item_height('mainWindow')
+    dpg.configure_item( 1_1 , width = w-15     , height = h*3/10    , pos = [ 10       , 25             ] )
+    dpg.configure_item( 1_2 , width = w/3      , height = h*6.60/10 , pos = [ 10       , (h//10)*3 + 20 ] )
+    dpg.configure_item( 1_3 , width = w*2/3-20 , height = h*6.60/10 , pos = [ w//3 + 15, (h//10)*3 + 35 ] )
+
+    w_header , h_header  = dpg.get_item_width( 1_1 ), dpg.get_item_height( 1_1 )
+    dpg.configure_item( 1_1_1_0 , width = w_header-16 , height = h_header-16 ) # HEADER 
+    dpg.configure_item( 1_1_1_1 , pmin  = (-30,-30)   , pmax   = ( w, round( h*3/10)*2 ))
+    dpg.configure_item( 1_1_1_2 , pmin  = (10,10)     , pmax   = (350,200) )
+
+    v_spacing = dpg.get_item_height( 1_2 ) // 7  # LATERAL 
+    dpg.configure_item( 1_2_11, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_22, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_33, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_44, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_55, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_66, width = w//3 - 15, height = v_spacing )  
+
+    dpg.configure_item( 1_3_1_0, width = (w*2/3-20)*0.99 , height = (h*6.60/10)*0.875 )
+    dpg.configure_item( 1_3_1_1, pmax  = [ (w*2/3-20)*0.99 , (h*6.60/10)*0.8750 ]  )
+    dpg.configure_item( 1_3_1_2, pos   = [ (w*2/3-20)*0.99//3 , 50 ])
+
+
+def render_inicio( ):
+    if dpg.get_frame_count() % 5 == 0: 
+        resize_inicio()   
+
+def init_inicio( windows :dict, callback ): 
+    with dpg.window( label = 'Header' , tag = 1_1, pos = [10, 25], no_move  = True , no_close    = True, no_title_bar= True, no_resize= True ) as Header_IN:    
         windows['Inicio'].append( Header_IN )
-        
-        img_fundo = add_image_loaded( PATH_IMG + 'fundo.jpg' )
-        img_logo  = add_image_loaded( PATH_IMG + 'JetTowers-Logo.png' )
-        add_drawlist( id = 1_1_1_0 )
-        draw_image  ( parent = 1_1_1_0, id = 1_1_1_1, label = 'imgFundo', texture_id = img_fundo, pmin = (0,0), pmax = (1,1) ) 
-        draw_image  ( parent = 1_1_1_0, id = 1_1_1_2, label = 'imgLogo' , texture_id = img_logo , pmin = (0,0), pmax = (1,1) )
-    
+        dpg.add_drawlist( tag = 1_1_1_0, width= dpg.get_item_width( 1_1 )-16, height= dpg.get_item_height( 1_1 ) - 16 )
+        dpg.draw_image  ( parent = 1_1_1_0, tag = 1_1_1_1, label = 'imgFundo', texture_tag = img_fundo, pmin = (0,0), pmax = (1,1) ) 
+        dpg.draw_image  ( parent = 1_1_1_0, tag = 1_1_1_2, label = 'imgLogo' , texture_tag = img_logo , pmin = (0,0), pmax = (1,1) )
 
-    with window( label = 'Lateral', id = 1_2, no_move= True , no_close = True , no_title_bar= True, no_resize= True ) as Lateral_IN:
+    with dpg.window( label = 'Lateral', tag = 1_2, no_move= True , no_close = True , no_title_bar= True, no_resize= True ) as Lateral_IN:
         windows['Inicio'].append( Lateral_IN )
-        add_spacing( count = 4 )
-        add_button(  label = "Visualização geral" , id = 1_2_1, arrow  = False, callback = callback, user_data   = "Visualizacao geral"  )
-        add_button(  label = "Posição do sol"     , id = 1_2_2, arrow  = False, callback = callback, user_data   = "Posicao do sol"      )
-        add_button(  label = "Atuadores"          , id = 1_2_3, arrow  = False, callback = callback, user_data   = "Atuadores"           )
-        add_button(  label = "Sensores"           , id = 1_2_6, arrow  = False, callback = callback, user_data   = "Sensores"            )
-        add_button(  label = "RedNode Comunicaçaõ", id = 1_2_7, arrow  = False, callback = callback, user_data   = "Rednode comunicacao" )
-        add_button(  label = "Configurações"      , id = 1_2_8, arrow  = False, callback = callback, user_data   = "Configuracoes"       )
-                
-    with window( label = 'Main'   , id = 1_3, no_move= True , no_close = True , no_title_bar= True, no_resize= True) as Main_IN:
+        dpg. add_spacer( )
+        dpg.add_button(  label = "Visualização geral" , tag = 1_2_11, arrow  = False, callback = callback, user_data   = "Visualizacao geral"  )
+        dpg.add_button(  label = "Posição do sol"     , tag = 1_2_22, arrow  = False, callback = callback, user_data   = "Posicao do sol"      )
+        dpg.add_button(  label = "Atuadores"          , tag = 1_2_33, arrow  = False, callback = callback, user_data   = "Atuadores"           )
+        dpg.add_button(  label = "Sensores"           , tag = 1_2_44, arrow  = False, callback = callback, user_data   = "Sensores"            )
+        dpg.add_button(  label = "RedNode Comunicaçaõ", tag = 1_2_55, arrow  = False, callback = callback, user_data   = "Rednode comunicacao" )
+        dpg.add_button(  label = "Configurações"      , tag = 1_2_66, arrow  = False, callback = callback, user_data   = "Configuracoes"       )
+
+    with dpg.window( label = 'Main'   , tag = 1_3, no_move= True , no_close = True , no_title_bar= True, no_resize= True) as Main_IN:
         windows['Inicio'].append( Main_IN )
-        
-        add_text( 'HOVER SOME ITEM AT THE LEFT SIDE...', id = 1_3_1)
-        add_hover_handler( parent = 1_2_1, callback = hover_buttons_IN, user_data = "Visualização geral"  )
-        add_hover_handler( parent = 1_2_2, callback = hover_buttons_IN, user_data = "Posição do sol"      )
-        add_hover_handler( parent = 1_2_3, callback = hover_buttons_IN, user_data = "Atuadores"           )
-        add_hover_handler( parent = 1_2_6, callback = hover_buttons_IN, user_data = "Sensores"            )
-        add_hover_handler( parent = 1_2_7, callback = hover_buttons_IN, user_data = "RedNode Comunicação" )
-        add_hover_handler( parent = 1_2_8, callback = hover_buttons_IN, user_data = "Configurações"       )
-
-    set_item_theme(1_1, 'no_win_border')
-    set_item_theme(1_2, 'no_win_border')
-    set_item_theme(1_3, 'no_win_border')
-
+        dpg.add_drawlist( tag = 1_3_1_0, width = 1000, height = 1000 )
+        dpg.draw_image  ( parent = 1_3_1_0, tag = 1_3_1_1, label = 'imgMain', texture_tag = img_inic, pmin = (0,0), pmax = (100,100) ) 
+        dpg.draw_text( pos = [500/500], text = '', tag = 1_3_1_2, size = 20 )
+    
+    resize_inicio() 
+    handlers_and_themes_inicio()

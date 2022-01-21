@@ -1,13 +1,12 @@
-from serial import Serial, SerialException
-from typing import Union
-import sys 
-import glob
+from serial            import Serial, SerialException
+from serial.serialutil import PARITY_ODD  
+from typing            import Union
 
-from serial.serialutil import PARITY_ODD 
-   
+import glob
+import sys 
+
 
 class UART_COM( Serial ):
-    
     seriais_available = [] 
     BUFFER_MAX = 30
     BUFFER_IN  = []
@@ -16,16 +15,14 @@ class UART_COM( Serial ):
     COUNTER_OUT = 0 
     COUNTER_IN  = 0 
 
-    def __init__ ( self, COM : str, baudrate : int = 9600, timeout : int = 1, *args, **kwargs ):
+    def __init__ ( self, COM : str, baudrate : int = 115200, timeout : int = 1, *args, **kwargs ):
         try: 
             super().__init__( COM, baudrate = baudrate, timeout = timeout, parity = PARITY_ODD)
             self.seriais_available.append( COM )  
             self.BAUDS     = baudrate
             self.TIMEOFF   = timeout
             self.COMPORT   = COM
-            self.connected = True 
         except:
-            self.connected = False 
             print( "Serial comport cant be opened" ) 
         
     def _write(self, data  : bytes ):
@@ -55,13 +52,15 @@ class UART_COM( Serial ):
         if self.connected:
             if n_bytes == 0:
                 n_bytes = self.in_waiting() 
+                if n_bytes == 0:
+                    return False 
             self.BUFFER_IN.append( self._read( n_bytes ) ) 
             if len(self.BUFFER_IN) > self.BUFFER_MAX: 
                 self.BUFFER_IN.pop(0)
             self.COUNTER_IN += 1 
             return self.BUFFER_IN[-1]
         else:
-            return [] 
+            return False 
     
     def in_waiting(self):
         try: 
@@ -73,17 +72,15 @@ class UART_COM( Serial ):
             print("Erro no In_Waiting")
             return -1 
 
-    def isOpen(self):
-        return super().isOpen()
+    @property
+    def connected( self ):
+        return super().isOpen() 
 
     def close(self):
         try:
-            super().close() 
-            self.connected   = False 
+            super().close()
             self.BUFFER_IN   = []
-            self.BUFFER_OUT  = [] 
-            self.COUNTER_IN  = 0
-            self.COUNTER_OUT = 0
+            self.BUFFER_OUT  = []
             return  True
         except:
             return -1 
@@ -92,10 +89,8 @@ class UART_COM( Serial ):
         if not self.connected: 
             try: 
                 super().__init__( self.COMPORT, baudrate = self.BAUDS, timeout = self.TIMEOFF )
-                self.connected = True
                 return True
             except:
-                self.connected = False
                 return -1 
 
     def get_serial_ports( self, lenght : int = 25 ):
