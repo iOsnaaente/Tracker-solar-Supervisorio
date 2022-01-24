@@ -2,13 +2,12 @@ import dearpygui.dearpygui as dpg
 from dearpygui.dearpygui import *
 from registry            import * 
 
-import datetime as dt 
-import inspect
+import datetime as dt
 import math 
 
 SUN_DATA.update_date() 
 
-# FUNÇÕES
+# FUNCTIONS 
 def get_semi_circle_points( center, radius, angle_i, angle_f, segments = 360, closed = False ):
     points_close = [[ center[0], center[1]-radius ] ,  center, [ center[0] + radius, center[1] ] ] 
     angles = [ ((angle_f - angle_i)/segments)*n for n in range(segments) ] 
@@ -90,40 +89,37 @@ def update_sun_trajetory( draw_id, parent_id, all_day = False ):
     for n, p in enumerate(dots):
         configure_item( id_link+(12+n) , center = p )
 
-def drawing_att_params():
-    pass 
-
-
-
 def att_sunpos_graphs( ):
     last_date = SUN_DATA.date
     if not dpg.get_value( HORA_MANUAL ): SUN_DATA.set_date( dt.datetime.utcnow() )  
-    else:                            SUN_DATA.set_date( dt.datetime( dpg.get_value(YEAR), dpg.get_value(MONTH), dpg.get_value(DAY), dpg.get_value(HOUR), dpg.get_value(MINUTE), dpg.get_value(SECOND) ) )    
+    else:                                SUN_DATA.set_date( dt.datetime( dpg.get_value(YEAR), dpg.get_value(MONTH), dpg.get_value(DAY), dpg.get_value(HOUR), dpg.get_value(MINUTE), dpg.get_value(SECOND) ) )    
     
-    azi_alt = SUN_DATA.trajetory( all_day = False )
+    azi_alt = SUN_DATA.trajetory( 50, all_day = False )
     SUN_DATA.set_date( last_date )
 
     AZI = [] 
     ALT = [] 
     PTI = [] 
     for azi, alt, tim in azi_alt: 
-        AZI.append( azi )
-        ALT.append( alt )
+        AZI.append( math.degrees(azi - math.pi) if azi > math.pi else math.degrees(azi + math.pi) )
+        ALT.append( math.degrees(alt) if alt < math.pi else 0  )
         PTI.append( dt.datetime.timestamp( tim ) ) 
     
-    azi, alt  = SUN_DATA.get_pos_from_date( last_date )
-    azi, alt  = [math.degrees(float(azi))], [math.degrees(float(azi))]
-    time_scrt = [math.degrees(float(dt.datetime.timestamp( last_date )))]
+    azi, alt  = [math.degrees(SUN_DATA.azi)], [math.degrees(SUN_DATA.alt)]
+    time_scrt = [math.degrees(dt.datetime.timestamp( last_date ))]
+    
+    SUN_DATA.set_date( last_date )
+
 
     configure_item (2_2_1_3, x    = PTI      , y    = AZI     )
     configure_item (2_2_1_4, x    = time_scrt, y    = azi )
     set_axis_limits(2_2_1_1, ymin = PTI[0]   , ymax = PTI[-1] )
-
     configure_item (2_2_2_3, x    = PTI      , y    = ALT     )
     configure_item (2_2_2_4, x    = time_scrt, y    = alt )
     set_axis_limits(2_2_2_1, ymin = PTI[0]   , ymax = PTI[-1] )
 
 
+# MAIN FUNCTIONS 
 def init_visualizacaoGeral( windows : dict ):
     # POSIÇÂO DO SOL 
     with window( label = 'Posição solar' , tag = 2_1_0, pos      = [50,50], width    = 500  , height      = 500 , no_move  = True, no_resize = True, no_collapse = True, no_close = True, no_title_bar= True ) as Posicao_sol_VG:
@@ -136,10 +132,6 @@ def init_visualizacaoGeral( windows : dict ):
     with window( label = 'Atuação'       , tag = 2_2_0, no_move  = True   , no_resize = True, no_collapse = True, no_close = True ) as Atuacao_VG:
         windows["Visualizacao geral"].append( Atuacao_VG )
         add_text('Área para a atução da posição dos paineis solares')
-        w, h   = get_item_width(2_2_0), get_item_height(2_2_0) 
-        center = cw, ch =  w//2 , h//2 
-        r = 100 
-
         with group( horizontal = True ): 
             with plot( tag = 2_2_1_0, label = 'Azimute do dia', height = 312, width = 478, anti_aliased = True ): 
                 add_plot_legend()
@@ -149,15 +141,15 @@ def init_visualizacaoGeral( windows : dict ):
                 set_axis_limits     ( 2_2_1_2, -5, 370 )
                 add_line_series     ( [], [], tag = 2_2_1_3, label = 'Rota diária', parent = 2_2_1_2 )
                 add_scatter_series  ( [], [], tag = 2_2_1_4, label = 'Ponto atual', parent = 2_2_1_2 ) 
-        
+       
             with plot( tag = 2_2_2_0, label = 'Altitude do dia', height = 312, width = 478, anti_aliased = True ): 
                 add_plot_axis( mvXAxis, label = 'Hora [h]'  , tag = 2_2_2_1, parent = 2_2_2_0 ) # X
                 add_plot_axis( mvYAxis, label = 'Angulo [º]', tag = 2_2_2_2, parent = 2_2_2_0 ) # Y 
                 set_axis_limits_auto( 2_2_2_1 )
                 set_axis_limits     ( 2_2_2_2, -5, 100 )
                 add_plot_legend()
-                add_line_series     ( [], [], tag = 2_2_2_3, label = 'Rota diária', parent = 2_2_1_2 )
-                add_scatter_series  ( [], [], tag = 2_2_2_4, label = 'Ponto atual', parent = 2_2_1_2 ) 
+                add_line_series     ( [], [], tag = 2_2_2_3, label = 'Rota diária', parent = 2_2_2_2 )
+                add_scatter_series  ( [], [], tag = 2_2_2_4, label = 'Ponto atual', parent = 2_2_2_2 ) 
             
             att_sunpos_graphs( ) 
         
@@ -166,7 +158,7 @@ def init_visualizacaoGeral( windows : dict ):
         windows["Visualizacao geral"].append( Painel_log_VG )
         
         add_text('Informações gerais do sistema')
-        with child_window( autosize_x = True, height = 165, menubar = True):
+        with child_window( autosize_x = True, height = 170, menubar = True):
             with menu_bar( label = 'menubar para datetime',):
                 add_menu_item( label = 'Hora automática', callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, False), shortcut = 'A data e hora de calculo é definida automaticamente de acordo com a hora do controlador local')
                 add_menu_item( label = 'Hora manual'    , callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, True) , shortcut = 'A data e hora de calculo é definida pela entrada do operador no supervisório' )
@@ -189,9 +181,8 @@ def init_visualizacaoGeral( windows : dict ):
 
             hide_item( 2_3_2_0 ) if dpg.get_value(HORA_MANUAL) == False else hide_item( 2_3_1_0 )
         
-        dpg.add_spacer( height = 10 )
+        dpg.add_spacer( height = 5 )
         with child_window( tag = 2_3_3_0, autosize_x = True, autosize_y = True ): 
-
             # Definições de longitude e latitude local
             with child_window( height = 90 ):
                 add_text('Definições de longitude e latitude local')
@@ -199,7 +190,7 @@ def init_visualizacaoGeral( windows : dict ):
                 dpg.add_spacer( )
                 add_input_float( label = 'Longitude', tag = 2_3_11, min_value = -90, max_value = 90, format = '%3.8f', indent=0.01, source = LONGITUDE, callback = lambda sender, data, user : SUN_DATA.set_longitude( data ) )
             
-            dpg.add_spacer( height = 10 )
+            dpg.add_spacer( height = 5 )
             with child_window( height = 150 ): 
                 # Informações do sol 
                 dpg.add_text('Informacoes do sol')
@@ -211,7 +202,7 @@ def init_visualizacaoGeral( windows : dict ):
                 dpg.add_spacer( )
                 dpg.add_drag_floatx( label = 'Horas de sol', tag = 2_3_15, size = 3, format='%.0f', no_input= True )
             
-            dpg.add_spacer( height = 10 )
+            dpg.add_spacer( height = 5 )
             with child_window( height = 200 ):
                 # Posições de interesse
                 add_text("Posicoes de interesse", )
@@ -223,7 +214,6 @@ def init_visualizacaoGeral( windows : dict ):
                 dpg.add_spacer( )
                 add_text('Por do sol (hh/mm/ss)'   )
                 add_drag_floatx( tag = 2_3_18, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_CULMINANT, data.extend([0]))  )
-
 
 def resize_visualizacaoGeral( ):
     # get the main_window dimension 
@@ -241,7 +231,6 @@ def resize_visualizacaoGeral( ):
     # SUNPATH ATT CHILD_WINDOW 
     configure_item( 2_2_1_0  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ 5            , 20 ]    ) # GIRO
     configure_item( 2_2_2_0  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ (w*2/3)//2 +5, 20 ]    ) # ELEVAÇÃO 
-
 
 def render_visualizacaoGeral( ):
     global TOT_SECONDS , JULIANSDAY, HORA_MANUAL
@@ -295,4 +284,5 @@ def render_visualizacaoGeral( ):
     dpg.set_value( 2_3_17, [ SUN_DATA.transit.hour+SUN_DATA.utc_local, SUN_DATA.transit.minute, SUN_DATA.transit.second ] ) # 'Culminante'   
     dpg.set_value( 2_3_18, [ SUN_DATA.sunset.hour+SUN_DATA.utc_local , SUN_DATA.sunset.minute , SUN_DATA.sunset.second  ] ) # 'Por do sol'      
 
-    drawing_att_params()
+    update_sun_trajetory( draw_id = 2_1_1_0 , parent_id = 2_1_0 )
+    att_sunpos_graphs()

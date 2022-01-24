@@ -46,7 +46,7 @@ def serial_capture_frames():
                     value = struct.unpack('f', value )[0]
                     dpg.set_value(MPE, value) 
                     MPE_LIST.append( dpg.get_value(MPE) )
-                    SPE_LIST.append( dpg.get_value(ALTITUDE) )
+                    SPE_LIST.append( dpg.get_value(ZENITE) )
                     #MDE_LIST.append( dt.timestamp( dt.utcnow() ) )
                     MDE_LIST.append( MPE_COUNT ) 
                     MPE_COUNT += 1
@@ -151,8 +151,8 @@ def serial_write_message(sender, data, user ):
         user  += struct.pack('ff', dpg.get_value(46_1_1_4_3)[0], dpg.get_value(46_1_1_4_3)[1] )
     if user   == 'INITCP':
         user   = 'INITCM'.encode()
-        user  += struct.pack('ff', dpg.get_value(AZIMUTE), dpg.get_value(ALTITUDE) )
-        print(dpg.get_value(AZIMUTE), dpg.get_value(ALTITUDE))
+        user  += struct.pack('ff', dpg.get_value(AZIMUTE), dpg.get_value(ZENITE) )
+        print(dpg.get_value(AZIMUTE), dpg.get_value(ZENITE))
         
     elif user == 'INITCm':
         user   = 'INITCm'.encode()
@@ -501,9 +501,5 @@ def render_atuador() :
     serial_atualize_cmd()
     if GPHE_ATT or GPHG_ATT:
         graphs_atualize()
-    
-    if dpg.get_frame_count() % 10000 == 0:
-        serial_write_message( None, None, 'INITCP')
-
 
 

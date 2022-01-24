@@ -1,9 +1,7 @@
+import dearpygui.dearpygui    as dpg
 from datetime import datetime as dt 
-import dearpygui.dearpygui as dpg
-
-
 from registry import * 
-from themes import * 
+from themes   import * 
 
 def add_image_loaded( img_path ):
     w, h, c, d = dpg.load_image( img_path )

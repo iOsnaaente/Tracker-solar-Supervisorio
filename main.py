@@ -5,6 +5,10 @@ dpg.create_context()
 dpg.create_viewport( title = 'Jet Towers Tracker', min_width = 800, min_height = 600 )
 dpg.setup_dearpygui()
 
+with dpg.font_registry():
+    defont = dpg.add_font("fonts\\verdana.ttf", 14 )
+dpg.bind_font( defont )
+    
 print( dpg.get_dearpygui_version() ) 
 
 # FUNCTIONS OF INICIALIZATION
@@ -102,6 +106,8 @@ change_menu  ( None, None, 'Inicio' )
 
 # START OF DPG VIEW 
 dpg.show_viewport( )
+
+
 while dpg.is_dearpygui_running(): 
     dpg.render_dearpygui_frame() 
     render_main() 
@@ -111,8 +117,16 @@ while dpg.is_dearpygui_running():
         dpg.set_value( ZENITE, math.degrees(SUN_DATA.alt)  ) 
         dpg.set_value( AZIMUTE, math.degrees(SUN_DATA.azi) )
 
-        
-    
+    if dpg.get_frame_count() % 1000: 
+        if COMP.connected:
+            try: 
+                msg   = 'INITCM'.encode()
+                msg  += struct.pack('ff', dpg.get_value(AZIMUTE), dpg.get_value(ZENITE) )
+                COMP.write( msg )
+            except SerialException as e:
+                print( e )
+        else: 
+            print( "Serial comp not connected ")
 
 # CLOSE DPG 
 dpg.destroy_context() 
