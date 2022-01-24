@@ -1,15 +1,10 @@
-from distutils.sysconfig import get_config_var
-from tokenize import group
-import dearpygui.dearpygui as dpg
-from serial.serialutil import SerialException
+from   serial.serialutil   import  SerialException
+import dearpygui.dearpygui as      dpg
 
 from   registry             import * 
 from   themes               import *
 
-from datetime import datetime as dt 
-
 import struct 
-import math 
 
 # FUNCTIONS 
 def serial_verify_connection(): 
