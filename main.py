@@ -1,32 +1,41 @@
 # INICIO DO CONTEXTO DPG 
 import dearpygui.dearpygui as dpg
 
+# INICIO DO CONTEXTO 
 dpg.create_context()
 dpg.create_viewport( title = 'Jet Towers Tracker', min_width = 800, min_height = 600 )
 dpg.setup_dearpygui()
 
+
+# CONFIGURAÇÃO DA FONTE - INICIO DO COD. 
 with dpg.font_registry():
     defont = dpg.add_font("fonts\\verdana.ttf", 14 )
 dpg.bind_font( defont )
-    
-print( dpg.get_dearpygui_version() ) 
+
+
+# HANDLER REGISTRIES - INICIO DO COD.
+with dpg.handler_registry( tag = 'handler' ):
+    #dpg.add_mouse_click_handler( button = dpg.mvMouseButton_Left, callback = lambda : print(dpg.get_mouse_pos()), user_data = 'draw_list' )
+    pass 
+
 
 # FUNCTIONS OF INICIALIZATION
 from registry import * 
 from themes   import * 
 from time     import *
 
-# LOCAL
+
+# IMPORTAÇÕES LOCAIS 
 from views.menuInicio            import *
 from views.menuVisualizacaoGeral import *
-#from views.menuPosicaoDoSol      import *
-
 from views.menuAtuadores         import * 
-#from views.menuSensores          import * 
-#from views.menuRedNodeComm       import * 
-#from views.menuConfigurações     import * 
+from views.menuSensores          import * 
+from views.menuRedNodeComm       import * 
+from views.menuConfigurações     import * 
+from connections.serial          import COMP
 
 window_opened = '' 
+
 
 # CALLBACKs
 def change_menu(sender, app_data, user_data ):
@@ -55,38 +64,41 @@ def resize_main( ):
     elif window_opened == 'Visualizacao geral' : resize_visualizacaoGeral()
     elif window_opened == 'Posicao do sol'     : lambda : print('resize_posicaoDoSol     (  )')
     elif window_opened == 'Atuadores'          : resize_atuador()     
-    elif window_opened == 'Sensores'           : lambda : print('resize_sensores         (  )') 
-    elif window_opened == 'Rednode comunicacao': lambda : print('resize_rednodecom       (  )') 
-    elif window_opened == 'Configuracoes'      : lambda : print('resize_configuracoes    (  )') 
+    elif window_opened == 'Sensores'           : resize_sensores() 
+    elif window_opened == 'Rednode comunicacao': resize_rednodecom() 
+    elif window_opened == 'Configuracoes'      : resize_configuracoes() 
 
 def render_main( ):
     global window_opened
     if   window_opened == 'Inicio'             : render_inicio()
-    elif window_opened == 'Visualizacao geral' : render_visualizacaoGeral() 
-    elif window_opened == 'Posicao do sol'     : lambda : print('render_posicaoDoSol     (  )')
+    elif window_opened == 'Visualizacao geral' : render_visualizacaoGeral()
+    elif window_opened == 'Posicao do sol'     : lambda : print('resize_posicaoDoSol     (  )')
     elif window_opened == 'Atuadores'          : render_atuador()     
-    elif window_opened == 'Sensores'           : lambda : print('render_sensores         (  )') 
-    elif window_opened == 'Rednode comunicacao': lambda : print('render_rednodecom       (  )') 
-    elif window_opened == 'Configuracoes'      : lambda : print('render_configuracoes    (  )') 
+    elif window_opened == 'Sensores'           : render_sensores()  
+    elif window_opened == 'Rednode comunicacao': render_rednodecom()
+    elif window_opened == 'Configuracoes'      : render_configuracao() 
+
+def init_main( ): 
+    # MAIN WINDOW 
+    with dpg.window( tag = 'mainWindow', autosize = True, no_close = True, no_move = True, no_resize = True ): 
+        with dpg.menu_bar(label = "MenuBar"):
+            dpg.add_menu_item( label = "Inicio"             , callback = change_menu, user_data = "Inicio"              )
+            dpg.add_menu_item( label = "Visualização geral" , callback = change_menu, user_data = "Visualizacao geral"  )
+            dpg.add_menu_item( label = "Atuadores"          , callback = change_menu, user_data = "Atuadores"           )
+            dpg.add_menu_item( label = "Sensores"           , callback = change_menu, user_data = "Sensores"            )
+            dpg.add_menu_item( label = "RedNode Comunicacao", callback = change_menu, user_data = "Rednode comunicacao" )
+            dpg.add_menu_item( label = "Configurações"      , callback = change_menu, user_data = "Configuracoes"       )
+            dpg.add_menu_item( label = 'Sair'               , callback = closing_dpg                                    )
 
 
-
-# MAIN WINDOW 
-with dpg.window( tag = 'mainWindow', autosize = True, no_close = True, no_move = True, no_resize = True ): 
-    with dpg.menu_bar(label = "MenuBar"):
-        dpg.add_menu_item( label = "Inicio"             , callback = change_menu, user_data = "Inicio"              )
-        dpg.add_menu_item( label = "Visualização geral" , callback = change_menu, user_data = "Visualizacao geral"  )
-        dpg.add_menu_item( label = "Atuadores"          , callback = change_menu, user_data = "Atuadores"           )
-        dpg.add_menu_item( label = "Sensores"           , callback = change_menu, user_data = "Sensores"            )
-        dpg.add_menu_item( label = "RedNode Comunicacao", callback = change_menu, user_data = "Rednode comunicacao" )
-        dpg.add_menu_item( label = "Configurações"      , callback = change_menu, user_data = "Configuracoes"       )
-        dpg.add_menu_item( label = 'Sair'               , callback = closing_dpg                                    )
-
-# HANDLER REGISTRIES 
-with dpg.handler_registry( tag = 'handler' ):
-    #dpg.add_mouse_click_handler( button = dpg.mvMouseButton_Left, callback = lambda : print(dpg.get_mouse_pos()), user_data = 'draw_list' )
-    pass 
-
+# INICIALIZAÇÔES
+init_main             (         ) 
+init_rednodecom       ( windows )
+init_inicio           ( windows, change_menu )
+init_atuador          ( windows ) 
+init_visualizacaoGeral( windows )
+init_sensores         ( windows )
+init_configuracoes    ( windows )
 
 
 # CONFIGURATIONS 
@@ -96,38 +108,32 @@ dpg.set_viewport_small_icon     ( PATH + 'ico\\small_ico.ico' )
 dpg.set_viewport_resize_callback( resize_main                 )
 dpg.maximize_viewport           (                             ) 
 
-# INICIALIZAÇÔES
-init_inicio           ( windows, change_menu )
-init_atuador          ( windows ) 
-init_visualizacaoGeral( windows )
-
+# SETA A JANELA INICIAL 
 change_menu  ( None, None, 'Inicio' )
 
 
 # START OF DPG VIEW 
 dpg.show_viewport( )
-
+D1 = time.time() 
 
 while dpg.is_dearpygui_running(): 
     dpg.render_dearpygui_frame() 
+    
     render_main() 
-
-    if dpg.get_frame_count() % 100 == 0: 
+    
+    # COM 60FPS TEM-SE 0.01667s PARA DAR 1 FRAME
+    # A CADA 60 FRAME SE PASSAM 1 SEGUNDO 
+    if dpg.get_frame_count() % 60 == 0: 
         SUN_DATA.update() 
         dpg.set_value( ZENITE, math.degrees(SUN_DATA.alt)  ) 
         dpg.set_value( AZIMUTE, math.degrees(SUN_DATA.azi) )
 
-    if dpg.get_frame_count() % 1000: 
-        if COMP.connected:
-            try: 
-                msg   = 'INITCM'.encode()
-                msg  += struct.pack('ff', dpg.get_value(AZIMUTE), dpg.get_value(ZENITE) )
-                COMP.write( msg )
-            except SerialException as e:
-                print( e )
-        else: 
-            print( "Serial comp not connected ")
-
+        # PARA DAR 3.600 FRAMES TEM-SE 1 MINUTO  
+        if dpg.get_frame_count() % 3_600 == 0:
+            if serial_comp_is_open():
+                serial_write_message( None, None, 'INITCP')
+                print( time.time() - D1 )
+                D1 = time.time() 
 # CLOSE DPG 
 dpg.destroy_context() 
 

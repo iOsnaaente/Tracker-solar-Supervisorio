@@ -154,9 +154,9 @@ def render_posicaoDoSol():
     global center
     global radius  
 
-    AZI_Angle = 90 - get_value(MG_Angle)
+    AZI_Angle = 90 - get_value(AZIMUTE)
     if AZI_Angle < 0 : AZI_Angle = 360 + AZI_Angle
-    ALT_Angle = get_value(ME_Angle)
+    ALT_Angle = get_value(ZENITE)
 
     if   sunrise <= 90 : range_arc = (90-sunrise)*2
     elif sunrise >= 270: range_arc = 180+(360-sunrise)*2

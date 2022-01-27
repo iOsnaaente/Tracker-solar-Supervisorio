@@ -1,193 +1,10 @@
-from   serial.serialutil   import  SerialException
-import dearpygui.dearpygui as      dpg
+import dearpygui.dearpygui as dpg
 
+from   connections.serial   import * 
 from   registry             import * 
 from   themes               import *
 
-import struct 
-
 # FUNCTIONS 
-def serial_verify_connection(): 
-    global COMP
-    if not COMP.connected: 
-        dpg.hide_item( 42_6 )
-        dpg.hide_item( 42_7 )
-        dpg.show_item( 42_4 )
-        dpg.set_value( SERIAL_CONNECTED, False)
-    else: 
-        if COMP.BUFFER_IN == []:
-            dpg.set_value( 46_2_1_1, "CONECTADO!" )
-
-def serial_capture_frames(): 
-    global COMP, MSG_INIT, MSG_COUNT
-    global MPE_LIST, MPE_COUNT, SPE_LIST
-    global MPG_LIST, MPG_COUNT, SPG_LIST
-    global MPE, MPG, ALTITUDE, AZIMUTE
-    global MDE_LIST, MDG_LIST 
-    global GPHG_ATT, GPHE_ATT
-
-    for ind, byte in enumerate(COMP.BUFFER_IN[-1][:-1]):
-        if byte == MSG_INIT[MSG_COUNT]: 
-            MSG_COUNT = MSG_COUNT +  1
-        else:
-            MSG_COUNT = 0 
-
-        if MSG_COUNT == 4: 
-            MSG_COUNT = 0
-            OP = COMP.BUFFER_IN[-1][ind+1]
-            if OP == ord('e'):
-                try:
-                    value = COMP.BUFFER_IN[-1][ind+2:ind+6]
-                    value = struct.unpack('f', value )[0]
-                    dpg.set_value(MPE, value) 
-                    MPE_LIST.append( dpg.get_value(MPE) )
-                    SPE_LIST.append( dpg.get_value(ZENITE) )
-                    #MDE_LIST.append( dt.timestamp( dt.utcnow() ) )
-                    MDE_LIST.append( MPE_COUNT ) 
-                    MPE_COUNT += 1
-                    GPHE_ATT = True 
-                except struct.error as e:
-                    print( e )
-
-            elif OP == ord('g'):
-                try: 
-                    value = COMP.BUFFER_IN[-1][ind+2:ind+6]
-                    value = struct.unpack('f', value )[0]
-                    dpg.set_value(MPG, value) 
-                    MPG_LIST.append( dpg.get_value(MPG) )
-                    SPG_LIST.append( dpg.get_value(AZIMUTE) )
-                    #MDG_LIST.append( dt.timestamp( dt.utcnow() ) )
-                    MDG_LIST.append( MPG_COUNT ) 
-                    MPG_COUNT += 1
-                    GPHG_ATT = True 
-                except struct.error as e:
-                    print( e )
-
-def serial_atualize_cmd( ): 
-    global COMP 
-    if COMP.connected:    
-        if COMP.read():
-            serial_capture_frames() 
-            MSG  = ''
-            for n, row in enumerate( COMP.BUFFER_IN ):
-                MSG += '[{}] '.format( COMP.COUNTER_IN + n - len(COMP.BUFFER_IN) )
-                if dpg.get_value( CMD_MODE ) == 'ASCII': 
-                    for collum in row: 
-                        MSG += chr(168) if collum < 32 or collum == 127 else chr(collum)
-                    MSG += '\n'
-                elif dpg.get_value( CMD_MODE ) == 'HEX': 
-                    for collum in row: 
-                        if collum == 10: MSG += '\n'
-                        else:            MSG += str(hex(168)) if collum < 32 or collum == 127 else str(hex(collum)) + ' '
-                    MSG += '\n'
-
-            dpg.set_value( 46_2_1_1, MSG )
-    else:
-        dpg.set_value( 46_2_1_1, "DESCONECTADO" ) 
-
-def graphs_atualize():
-    global GPHE_ATT, GPHG_ATT
-    global MPG_LIST, MPG_COUNT
-    global SPG_LIST, SPE_LIST
-    global MPE_LIST, MPE_COUNT
-    global MDE_LIST, MDG_LIST 
-
-    if GPHG_ATT: 
-        # GIRO 
-        if MPG_LIST: 
-            while len(MPG_LIST) > 1000:
-                MPG_LIST.pop(0)
-                MDG_LIST.pop(0)
-            dpg.configure_item( 44_1_1, x = MDG_LIST, y = MPG_LIST )
-            dpg.configure_item( 44_1_2, x = MDG_LIST, y = SPG_LIST )
-            dpg.set_axis_limits( 'x_axis_azi', ymin = MDG_LIST[0], ymax = MDG_LIST[-1])
-        GPHG_ATT = False 
-    
-    if GPHE_ATT:
-        # ELEVAÇÂO
-        if MPE_LIST:
-            while len(MPE_LIST) > 1000:
-                MPE_LIST.pop(0)
-                MDE_LIST.pop(0)
-            dpg.configure_item( 45_1_1, x = MDE_LIST, y = MPE_LIST )
-            dpg.configure_item( 45_1_2, x = MDE_LIST, y = SPE_LIST )
-            dpg.set_axis_limits( 'x_axis_alt', ymin = MDE_LIST[0], ymax = MDE_LIST[-1])
-        GPHE_ATT = False 
-
-
-# CALLBACKS 
-def serial_refresh( sender, data, user ): 
-    global COMP 
-    dpg.configure_item( 42_1_1, label = 'Procurando' ) 
-    dpg.configure_item( 42_1  , items = COMP.get_serial_ports( 20 ) )
-    dpg.configure_item( 42_1_1, label = 'Refresh' )
-
-def serial_try_to_connect( sender, data, user ): 
-    global COMP 
-    COMP = UART_COM( dpg.get_value(SERIAL_PORT), baudrate = int(dpg.get_value(SERIAL_BAUDRATE)), timeout = dpg.get_value(SERIAL_TIMEOUT) )
-    if COMP.connected:
-        dpg.show_item( 42_6 )
-        dpg.show_item( 42_7 )
-        dpg.bind_item_theme( item = 42_6, theme = theme_button_on  )
-        dpg.bind_item_theme( item = 42_7, theme = theme_button_off )
-        dpg.hide_item( 42_4 )
-        dpg.set_value( SERIAL_CONNECTED, True)
-    else:   
-        dpg.hide_item( 42_6 )
-        dpg.hide_item( 42_7 )
-        dpg.show_item( 42_4 )
-        dpg.set_value( SERIAL_CONNECTED, False)
-
-def serial_write_message(sender, data, user ):
-    global COMP
-    ## Control Params 
-    if user   == 'INITCM':
-        user   = 'INITCM'.encode()
-        user  += struct.pack('ff', dpg.get_value(46_1_1_4_3)[0], dpg.get_value(46_1_1_4_3)[1] )
-    if user   == 'INITCP':
-        user   = 'INITCM'.encode()
-        user  += struct.pack('ff', dpg.get_value(AZIMUTE), dpg.get_value(ZENITE) )
-        print(dpg.get_value(AZIMUTE), dpg.get_value(ZENITE))
-        
-    elif user == 'INITCm':
-        user   = 'INITCm'.encode()
-        user  += 'G'.encode() if dpg.get_value(46_1_1_4_5) == 'Gir' else 'E'.encode()
-        user  += struct.pack('f', dpg.get_value(46_1_1_4_4))
-    elif user == 'INITCp':
-        user   =  'INITC'.encode()
-        user  +=  'G'.encode() if dpg.get_value(46_1_1_4_21) == 'Gir' else 'E'.encode()
-        user  +=  dpg.get_value(46_1_1_4_22)
-        user  +=  struct.pack( 'f', dpg.get_value(46_1_1_4_1) )
-
-    ## Datetime Params 
-    elif user == "INITH": 
-        user  = "INITH".encode() 
-        date  = dpg.get_value( 46_1_1_1 )
-        hour  = dpg.get_value( 46_1_1_2 ) 
-        if date[0] > 31:    raise 'days out of range'
-        if date[1] > 12:    raise 'months out of range'       
-        if hour[0] > 60:    raise 'seconds out of range'
-        if hour[1] > 60:    raise 'minutes out of range'
-        if hour[2] > 23:    raise 'hours out of range'
-        if date[2] > 2000:  date[2] -= 2000
-        user += struct.pack( 'bbb', date[0], date[1], date[2])
-        user += struct.pack( 'bbb', hour[0], hour[1], hour[2])
-
-    if user == 'manual_send':
-        user = dpg.get_value(46_2_2_2)
-
-    try: 
-        if type( user ) == bytes: COMP.write( user )
-        elif type( user ) == str: COMP.write( user.encode() )
-    except SerialException as e:
-        print( e )
-    print( sender, data, user )
-
-def serial_close_connection(sender, data, user): 
-    global COMP
-    COMP.close()
-    serial_verify_connection() 
-
 def change_menubar_cmd( sender, data, user ):
     dpg.set_value( CMD_MODE, user )
     if COMP.connected:
@@ -252,7 +69,7 @@ def init_atuador( windows : dict ):
     # Step Motors Config 
     with dpg.window( label = 'Motores'    , tag = 43_0, width= 455, height= 480, pos = [10,360], no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True) as config_AT:
         windows['Atuadores'].append( config_AT )
-
+        
         def change_menubar_motors(sender, data, user ): 
             if user == 'step':
                 dpg.show_item(43_2_0)
@@ -319,21 +136,20 @@ def init_atuador( windows : dict ):
         
         with dpg.plot( tag = 44_1_0, parent = 44_0, label = 'Azimute e angulo de giro', height = 312, width = 478, anti_aliased = True ): 
             dpg.add_plot_legend( )
-            dpg.add_plot_axis  ( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_azi',)
+            dpg.add_plot_axis  ( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_azi', time = True )
             dpg.add_plot_axis  ( dpg.mvYAxis, label = 'Angulo [º]' , tag = 'y_axis_azi' )
             dpg.set_axis_limits( 'x_axis_azi',  0,   1 )
             dpg.set_axis_limits( 'y_axis_azi', -5, 375 )
             dpg.add_line_series( [], [], tag = 44_1_1, label = 'Sensor Giro', parent = 'y_axis_azi' )
             dpg.add_line_series( [], [], tag = 44_1_2, label = 'Azimute sol', parent = 'y_axis_azi' ) 
  
-
     # Zenite / Altitude Draw 
     with dpg.window(label  = 'Zenite'     , tag = 45_0, width= 495, height= 330, pos = [970,25], no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True) as zenite_config_AT:
         windows['Atuadores'].append( zenite_config_AT )  
         
         with dpg.plot( tag = 45_1_0, label = 'Zenite e angulo de elevação', height = 312, width = 478, anti_aliased = True ): 
             dpg.add_plot_legend()
-            dpg.add_plot_axis( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_alt' )
+            dpg.add_plot_axis( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_alt', time = True  )
             dpg.add_plot_axis( dpg.mvYAxis, label = 'Angulo [º]', tag = 'y_axis_alt' )
             dpg.set_axis_limits_auto( 'x_axis_alt')
             dpg.set_axis_limits( 'y_axis_alt', -5, 370 )
@@ -493,8 +309,5 @@ def resize_atuador():
 
 def render_atuador() : 
     serial_verify_connection()
-    serial_atualize_cmd()
-    if GPHE_ATT or GPHG_ATT:
-        graphs_atualize()
-
+    serial_atualize_actuator_cmd()
 

@@ -4,10 +4,7 @@ import math
 import os 
 
 from utils.Model     import SunPosition
-from utils.UART_comm import UART_COM 
 
-# SERIAL 
-COMP = UART_COM( "" )
 
 # GRAPHS 
 MPE_LIST  = []
@@ -26,6 +23,8 @@ DOMINIO  = []
 
 MSG_INIT    = [ ord(i) for i in 'init' ]
 MSG_COUNT   = 0 
+
+DIAGNOSIS_LIST = [] 
 
 DOM         = [ 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro' ]
 
@@ -133,11 +132,12 @@ with dpg.value_registry( ) as registries:
     HORA_MANUAL      = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_99_41 )  
     
     # ATUADOR 
-    CMD_MODE         = dpg.add_string_value( parent = registries, default_value = 'HEX'               , tag = 99_99_99_42 )
+    CMD_MODE         = dpg.add_string_value( parent = registries, default_value = 'ASCII'             , tag = 99_99_99_42 )
 
 
 SUN_DATA = SunPosition( dpg.get_value(LATITUDE), dpg.get_value(LONGITUDE), dpg.get_value(ALTITUDE) )
 SUN_DATA.update() 
+
 dpg.set_value( SPE, math.degrees(SUN_DATA.alt) ) 
 dpg.set_value( SPG, math.degrees(SUN_DATA.azi) ) 
 
