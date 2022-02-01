@@ -1,5 +1,4 @@
-import dearpygui.dearpygui as dpg
-
+import dearpygui.dearpygui  as dpg
 from   connections.serial   import * 
 from   registry             import * 
 from   themes               import *
@@ -136,7 +135,7 @@ def init_atuador( windows : dict ):
         
         with dpg.plot( tag = 44_1_0, parent = 44_0, label = 'Azimute e angulo de giro', height = 312, width = 478, anti_aliased = True ): 
             dpg.add_plot_legend( )
-            dpg.add_plot_axis  ( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_azi', time = True )
+            dpg.add_plot_axis  ( dpg.mvXAxis, label = 'Medições [n]', tag = 'x_axis_azi', time = True, no_tick_labels = True )
             dpg.add_plot_axis  ( dpg.mvYAxis, label = 'Angulo [º]' , tag = 'y_axis_azi' )
             dpg.set_axis_limits( 'x_axis_azi',  0,   1 )
             dpg.set_axis_limits( 'y_axis_azi', -5, 375 )
@@ -149,7 +148,7 @@ def init_atuador( windows : dict ):
         
         with dpg.plot( tag = 45_1_0, label = 'Zenite e angulo de elevação', height = 312, width = 478, anti_aliased = True ): 
             dpg.add_plot_legend()
-            dpg.add_plot_axis( dpg.mvXAxis, label = 'medição [n]', tag = 'x_axis_alt', time = True  )
+            dpg.add_plot_axis( dpg.mvXAxis, label = 'Medições [n]', tag = 'x_axis_alt', time = True, no_tick_labels = True  )
             dpg.add_plot_axis( dpg.mvYAxis, label = 'Angulo [º]', tag = 'y_axis_alt' )
             dpg.set_axis_limits_auto( 'x_axis_alt')
             dpg.set_axis_limits( 'y_axis_alt', -5, 370 )
@@ -223,6 +222,11 @@ def init_atuador( windows : dict ):
                     dpg.add_input_intx( tag =46_1_1_2, size=3, default_value=[ 15, 35, 10  ], max_value = 60, callback = serial_write_message, user_data = 'INITH', on_enter = True ) 
                     dpg.group( horizontal = True )
                     dpg.add_text('hh:mm:ss') 
+
+                    with dpg.group( horizontal = True ):
+                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITHA' )
+                        dpg.add_text('HA -> Enviar datetime atual')
+
                 
                 # CONTROL 
                 with dpg.child_window( tag = 46_1_1_4_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
@@ -283,6 +287,8 @@ def init_atuador( windows : dict ):
                         dpg.add_text      ( tag   = 46_2_2_1  , default_value =  "To send: "    )
                         dpg.add_input_text( tag   = 46_2_2_2  , on_enter =  True , callback = serial_write_message, user_data = 'manual_send' )
                         dpg.add_button    ( label = 'send'    , callback =  serial_write_message, user_data = 'manual_send' )
+    
+    # Aply handlers 
     handlers_and_themes_atuador()
 
 def resize_atuador(): 
@@ -310,4 +316,6 @@ def resize_atuador():
 def render_atuador() : 
     serial_verify_connection()
     serial_atualize_actuator_cmd()
+
+    
 

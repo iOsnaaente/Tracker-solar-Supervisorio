@@ -116,7 +116,7 @@ class SunPosition:
 
     # Setar a data manualmente
     def set_date(self, data):
-        # OBRIGADO USAR DARA NO ESTILO DATETIME.DATETIME
+        # OBRIGADO USAR DATA NO ESTILO DATETIME.DATETIME
         if type(data) is datetime.datetime:
             self.date = data
             self.update_date(True)

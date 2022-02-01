@@ -21,6 +21,17 @@ GPHG_ATT  = False
 
 DOMINIO  = [] 
 
+MS_GIRO  = [] 
+PS_GIRO  = [] 
+TM_GIRO  = [] 
+CNT_GIRO = 0
+
+MS_ELE   = [] 
+PS_ELE   = [] 
+TM_ELE   = []
+CNT_ELE  = 0
+
+
 MSG_INIT    = [ ord(i) for i in 'init' ]
 MSG_COUNT   = 0 
 
@@ -66,7 +77,6 @@ windows = {
             "Configuracoes"      : [  ],
             'Sair'               : [  ],
             }
-
 
 with dpg.value_registry( ) as registries:
     # POSIÇÃO GEOGRÁFICA CONSTANTE - PEGAR DE UM DOCUMENTO
@@ -132,7 +142,16 @@ with dpg.value_registry( ) as registries:
     HORA_MANUAL      = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_99_41 )  
     
     # ATUADOR 
-    CMD_MODE         = dpg.add_string_value( parent = registries, default_value = 'ASCII'             , tag = 99_99_99_42 )
+    WRONG_DATETIME   = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_99_42 ) 
+    CMD_MODE         = dpg.add_string_value( parent = registries, default_value = 'ASCII'             , tag = 99_99_99_43 )
+    STATE            = dpg.add_string_value( parent = registries, default_value = 'AUTO'              , tag = 99_99_99_44 )
+
+    #MS_GIRO          = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_43 )
+    #PS_GIRO          = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_44 )
+    #TM_GIRO          = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_45 )
+    #MS_ELE           = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_46 )
+    #PS_ELE           = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_47 )
+    #TM_ELE           = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_48 )
 
 
 SUN_DATA = SunPosition( dpg.get_value(LATITUDE), dpg.get_value(LONGITUDE), dpg.get_value(ALTITUDE) )

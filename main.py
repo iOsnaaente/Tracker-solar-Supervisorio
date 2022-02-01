@@ -108,32 +108,46 @@ dpg.set_viewport_small_icon     ( PATH + 'ico\\small_ico.ico' )
 dpg.set_viewport_resize_callback( resize_main                 )
 dpg.maximize_viewport           (                             ) 
 
+
 # SETA A JANELA INICIAL 
 change_menu  ( None, None, 'Inicio' )
 
 
 # START OF DPG VIEW 
 dpg.show_viewport( )
-D1 = time.time() 
+
 
 while dpg.is_dearpygui_running(): 
     dpg.render_dearpygui_frame() 
-    
     render_main() 
     
     # COM 60FPS TEM-SE 0.01667s PARA DAR 1 FRAME
     # A CADA 60 FRAME SE PASSAM 1 SEGUNDO 
     if dpg.get_frame_count() % 60 == 0: 
-        SUN_DATA.update() 
-        dpg.set_value( ZENITE, math.degrees(SUN_DATA.alt)  ) 
-        dpg.set_value( AZIMUTE, math.degrees(SUN_DATA.azi) )
+        if not dpg.get_value( HORA_MANUAL ): 
+            SUN_DATA.set_date( dt.datetime.utcnow() )
+            dpg.set_value( ZENITE , math.degrees(SUN_DATA.alt) ) 
+            dpg.set_value( AZIMUTE, math.degrees(SUN_DATA.azi) )
+            dpg.set_value( YEAR   , SUN_DATA.year   )
+            dpg.set_value( MONTH  , SUN_DATA.month  )
+            dpg.set_value( DAY    , SUN_DATA.day    )
+            dpg.set_value( HOUR   , SUN_DATA.hour   )
+            dpg.set_value( MINUTE , SUN_DATA.minute )
+            dpg.set_value( SECOND , SUN_DATA.second )
+            dpg.set_value( TOT_SECONDS, SUN_DATA.total_seconds )
+            dpg.set_value( JULIANSDAY , SUN_DATA.dia_juliano )
 
+        if dpg.get_frame_count() % 600 == 0: 
+            if serial_comp_is_open():
+                if dpg.get_value( WRONG_DATETIME ):
+                    serial_write_message( None, None, 'INITHA')
+                    print( 'mudamos a hora ')
+                
         # PARA DAR 3.600 FRAMES TEM-SE 1 MINUTO  
-        if dpg.get_frame_count() % 3_600 == 0:
+        if dpg.get_frame_count() % 3_6000 == 0:
             if serial_comp_is_open():
                 serial_write_message( None, None, 'INITCP')
-                print( time.time() - D1 )
-                D1 = time.time() 
+                serial_request_diagnosis( None, None, None)
 # CLOSE DPG 
 dpg.destroy_context() 
 
