@@ -1,9 +1,11 @@
 import os 
 PATH     = os.path.dirname( __file__ ).removesuffix('views')
-PATH_IMG = PATH + 'img\\'
+PATH_IMG = PATH + 'utils\\img\\'
 
 import sys 
 sys.path.insert(0, PATH )
+
+import time 
 
 import dearpygui.dearpygui as dpg 
 from   functions import add_image_loaded
@@ -23,18 +25,25 @@ img_conf  = add_image_loaded( PATH_IMG + 'init_img\\' + 'conf.png')
 # CALLBACKS 
 def hover_buttons ( handler , data, user ):    
     if   data == 1_2_11 : dpg.configure_item( 1_3_1_1, texture_tag = img_inic ) 
-    #elif data == 1_2_22 : dpg.configure_item( 1_3_1_1, texture_tag = img_posi ) 
+    elif data == 1_2_22 : dpg.configure_item( 1_3_1_1, texture_tag = img_posi ) 
     elif data == 1_2_33 : dpg.configure_item( 1_3_1_1, texture_tag = img_atua ) 
     elif data == 1_2_44 : dpg.configure_item( 1_3_1_1, texture_tag = img_sens ) 
     elif data == 1_2_55 : dpg.configure_item( 1_3_1_1, texture_tag = img_comu ) 
     elif data == 1_2_66 : dpg.configure_item( 1_3_1_1, texture_tag = img_conf ) 
+
+def closing_dpg( sender, data, user ): 
+    with dpg.window( pos = [ dpg.get_item_width('mainWindow')/2.5, dpg.get_item_height('mainWindow')/2.5]): 
+        dpg.add_text( 'Obrigado por usar nosso programa\nEle irá encerrar em instantes' )
+    time.sleep(2)
+    dpg.stop_dearpygui() 
+
 
 # HANDLER_REGISTERS / THEMES 
 def handlers_and_themes_inicio(): 
     with dpg.item_handler_registry( ) as handler_hover:
         dpg.add_item_hover_handler( callback = hover_buttons )
     dpg.bind_item_handler_registry( item = 1_2_11, handler_registry = handler_hover )
-    #dpg.bind_item_handler_registry( item = 1_2_22, handler_registry = handler_hover )
+    dpg.bind_item_handler_registry( item = 1_2_22, handler_registry = handler_hover )
     dpg.bind_item_handler_registry( item = 1_2_33, handler_registry = handler_hover )
     dpg.bind_item_handler_registry( item = 1_2_44, handler_registry = handler_hover )
     dpg.bind_item_handler_registry( item = 1_2_55, handler_registry = handler_hover )
@@ -56,9 +65,9 @@ def resize_inicio( ):
     dpg.configure_item( 1_1_1_1 , pmin  = (-30,-30)   , pmax   = ( w, round( h*3/10)*2 ))
     dpg.configure_item( 1_1_1_2 , pmin  = (10,10)     , pmax   = (350,200) )
 
-    v_spacing = dpg.get_item_height( 1_2 ) // 6  # LATERAL 
+    v_spacing = dpg.get_item_height( 1_2 ) // 7  # LATERAL 
     dpg.configure_item( 1_2_11, width = w//3 - 15, height = v_spacing ) 
-    #dpg.configure_item( 1_2_22, width = w//3 - 15, height = v_spacing ) 
+    dpg.configure_item( 1_2_22, width = w//3 - 15, height = v_spacing ) 
     dpg.configure_item( 1_2_33, width = w//3 - 15, height = v_spacing ) 
     dpg.configure_item( 1_2_44, width = w//3 - 15, height = v_spacing ) 
     dpg.configure_item( 1_2_55, width = w//3 - 15, height = v_spacing ) 
@@ -84,11 +93,11 @@ def init_inicio( windows :dict, callback ):
         windows['Inicio'].append( Lateral_IN )
         dpg. add_spacer( )
         dpg.add_button(  label = "Visualização geral" , tag = 1_2_11, arrow  = False, callback = callback, user_data   = "Visualizacao geral"  )
-        #dpg.add_button(  label = "Posição do sol"     , tag = 1_2_22, arrow  = False, callback = callback, user_data   = "Posicao do sol"      )
         dpg.add_button(  label = "Atuadores"          , tag = 1_2_33, arrow  = False, callback = callback, user_data   = "Atuadores"           )
         dpg.add_button(  label = "Sensores"           , tag = 1_2_44, arrow  = False, callback = callback, user_data   = "Sensores"            )
         dpg.add_button(  label = "RedNode Comunicaçaõ", tag = 1_2_55, arrow  = False, callback = callback, user_data   = "Rednode comunicacao" )
         dpg.add_button(  label = "Configurações"      , tag = 1_2_66, arrow  = False, callback = callback, user_data   = "Configuracoes"       )
+        dpg.add_button(  label = "Sair"               , tag = 1_2_22, arrow  = False, callback = closing_dpg                                   )
 
     with dpg.window( label = 'Main'   , tag = 1_3, no_move= True , no_close = True , no_title_bar= True, no_resize= True) as Main_IN:
         windows['Inicio'].append( Main_IN )

@@ -33,7 +33,7 @@ dpg.bind_theme( global_theme )
 
 #   FONTS 
 with dpg.font_registry() as font_add: 
-    default_font = dpg.add_font( PATH + '\\fonts\\verdana.ttf', 14, parent = font_add )
+    default_font = dpg.add_font( PATH + '\\utils\\fonts\\verdana.ttf', 14, parent = font_add )
     dpg.bind_font( default_font )
 
 

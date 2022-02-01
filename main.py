@@ -9,7 +9,7 @@ dpg.setup_dearpygui()
 
 # CONFIGURAÇÃO DA FONTE - INICIO DO COD. 
 with dpg.font_registry():
-    defont = dpg.add_font("fonts\\verdana.ttf", 14 )
+    defont = dpg.add_font("utils\\fonts\\verdana.ttf", 14 )
 dpg.bind_font( defont )
 
 
@@ -103,8 +103,8 @@ init_configuracoes    ( windows )
 
 # CONFIGURATIONS 
 dpg.set_primary_window          ( 'mainWindow', True          )
-dpg.set_viewport_large_icon     ( PATH + 'ico\\large_ico.ico' )
-dpg.set_viewport_small_icon     ( PATH + 'ico\\small_ico.ico' )
+dpg.set_viewport_large_icon     ( PATH + 'utils\\ico\\large_ico.ico' )
+dpg.set_viewport_small_icon     ( PATH + 'utils\\ico\\small_ico.ico' )
 dpg.set_viewport_resize_callback( resize_main                 )
 dpg.maximize_viewport           (                             ) 
 
