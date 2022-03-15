@@ -1,9 +1,6 @@
 import dearpygui.dearpygui  as dpg 
-import datetime as dt 
 import math 
 import os 
-
-from utils.Model     import SunPosition
 
 
 # GRAPHS 
@@ -42,7 +39,6 @@ DOM         = [ 'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Jul
 PATH        = os.path.dirname( __file__ )
 PATH_IMG    = PATH + 'img\\'
 
-
 COLOR = {
     "black"     : lambda alfa : [    0,    0,    0, alfa ],
     "red"       : lambda alfa : [  255,    0,    0, alfa ],
@@ -61,8 +57,6 @@ COLOR = {
     'off_color' : lambda alfa : [ 0xff, 0x45, 0x00, alfa ],
     'off_hover' : lambda alfa : [ 0xf0, 0x80, 0x80, alfa ],
     'off_click' : lambda alfa : [ 0x8b, 0x45, 0x13, alfa ],
-
-
     }
 
 windows = {
@@ -89,16 +83,16 @@ with dpg.value_registry( ) as registries:
     #   GIRO 
     MPG              = dpg.add_float_value ( parent = registries, default_value = 425                 , tag = 99_99_5 )
     MG_VELANG        = dpg.add_float_value ( parent = registries, default_value = 1.0                 , tag = 99_99_6 )  
-    MG_RESOLUCAO     = dpg.add_float_value ( parent = registries, default_value = 0.0                 , tag = 99_99_7 )
-    MG_STEPS         = dpg.add_float_value ( parent = registries, default_value = 0.0                 , tag = 99_99_8 )
-    MG_USTEP         = dpg.add_string_value( parent = registries, default_value = '1/16'              , tag = 99_99_9 )
+    MG_STEPS         = dpg.add_float_value ( parent = registries, default_value = 1.8                 , tag = 99_99_8 )
+    MG_USTEP         = dpg.add_string_value( parent = registries, default_value = '1/8'               , tag = 99_99_9 )
+    MG_RESOLUCAO     = dpg.add_float_value ( parent = registries, default_value = 0.225               , tag = 99_99_7 )
     MG_ONOFF         = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_10 ) 
     #   ELEVAÇÃO
     MPE              = dpg.add_float_value ( parent = registries, default_value = 100                 , tag = 99_99_11 )
     ME_VELANG        = dpg.add_float_value ( parent = registries, default_value = 1.0                 , tag = 99_99_12 )  
-    ME_RESOLUCAO     = dpg.add_float_value ( parent = registries, default_value = 0.0                 , tag = 99_99_13 )
-    ME_STEPS         = dpg.add_float_value ( parent = registries, default_value = 0.0                 , tag = 99_99_14 )
-    ME_USTEP         = dpg.add_string_value( parent = registries, default_value = '1/16'              , tag = 99_99_15 ) 
+    ME_STEPS         = dpg.add_float_value ( parent = registries, default_value = 1.8                 , tag = 99_99_14 )
+    ME_USTEP         = dpg.add_string_value( parent = registries, default_value = '1/8'               , tag = 99_99_15 ) 
+    ME_RESOLUCAO     = dpg.add_float_value ( parent = registries, default_value = 0.225                , tag = 99_99_13 )
     ME_ONOFF         = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_16 ) 
 
     # DADOS DOS SENSORES 
@@ -154,16 +148,20 @@ with dpg.value_registry( ) as registries:
     #TM_ELE           = dpg.add_float_vect_value( parent = registries, default_value = [], tag = 99_99_99_48 )
 
 
+from utils.Model import SunPosition
+
 SUN_DATA = SunPosition( dpg.get_value(LATITUDE), dpg.get_value(LONGITUDE), dpg.get_value(ALTITUDE) )
 SUN_DATA.update() 
 
 dpg.set_value( SPE, math.degrees(SUN_DATA.alt) ) 
 dpg.set_value( SPG, math.degrees(SUN_DATA.azi) ) 
 
+import datetime as dt 
 date   = dt.datetime.utcnow()
-dpg.set_value( YEAR  ,date.year   ) 
-dpg.set_value( MONTH ,date.month  )
-dpg.set_value( DAY   ,date.day    )
-dpg.set_value( HOUR  ,date.hour   )  
-dpg.set_value( MINUTE,date.minute ) 
-dpg.set_value( SECOND,date.second ) 
+
+dpg.set_value( YEAR  ,  date.year   ) 
+dpg.set_value( MONTH ,  date.month  )
+dpg.set_value( DAY   ,  date.day    )
+dpg.set_value( HOUR  ,  date.hour   )  
+dpg.set_value( MINUTE,  date.minute ) 
+dpg.set_value( SECOND,  date.second ) 

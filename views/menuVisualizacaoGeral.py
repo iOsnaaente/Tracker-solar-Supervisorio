@@ -1,8 +1,8 @@
 import dearpygui.dearpygui as dpg 
-from registry            import * 
-
-import datetime as dt
+import datetime            as dt
 import math 
+
+from registry              import * 
 
 SUN_DATA.update_date() 
 
@@ -109,12 +109,12 @@ def att_sunpos_graphs( ):
     
     SUN_DATA.set_date( last_date )
 
-    dpg.configure_item (2_2_1_3, x    = PTI      , y    = AZI     )
-    dpg.configure_item (2_2_1_4, x    = time_scrt, y    = azi )
-    dpg.set_axis_limits(2_2_1_1, ymin = PTI[0]   , ymax = PTI[-1] )
-    dpg.configure_item (2_2_2_3, x    = PTI      , y    = ALT     )
-    dpg.configure_item (2_2_2_4, x    = time_scrt, y    = alt )
-    dpg.set_axis_limits(2_2_2_1, ymin = PTI[0]   , ymax = PTI[-1] )
+    dpg.configure_item (22_13, x    = PTI      , y    = AZI     )
+    dpg.configure_item (22_14, x    = time_scrt, y    = azi )
+    dpg.set_axis_limits(22_11, ymin = PTI[0]   , ymax = PTI[-1] )
+    dpg.configure_item (22_23, x    = PTI      , y    = ALT     )
+    dpg.configure_item (22_24, x    = time_scrt, y    = alt )
+    dpg.set_axis_limits(22_21, ymin = PTI[0]   , ymax = PTI[-1] )
 
 
 # MAIN FUNCTIONS 
@@ -123,8 +123,8 @@ def init_visualizacaoGeral( windows : dict ):
     with dpg.window( label = 'Posição solar' , tag = 21_0, pos      = [50,50], width    = 500  , height      = 500 , no_move  = True, no_resize = True, no_collapse = True, no_close = True, no_title_bar= True ) as Posicao_sol_VG:
         windows["Visualizacao geral"].append( Posicao_sol_VG )
         w, h = dpg.get_item_width(2_1_0), dpg.get_item_height(2_1_0)
-        dpg.add_drawlist      ( tag      = 2_1_1_0, width     = w-20  , height = h-50, label = 'Solar')
-        draw_sun_trajetory( draw_id = 2_1_1_0, parent_id = 2_1_0 )
+        dpg.add_drawlist   ( tag      = 21_1_0, width     = w-20  , height = h-50, label = 'Solar')
+        draw_sun_trajetory ( draw_id = 2_1_1_0, parent_id = 2_1_0 )
 
     # VISOR DAS POSIÇÔES DO SOL - USAR GRÀFICOS - MESMO DO TOOLTIP 
     with dpg.window( label = 'Atuação'       , tag = 22_0, no_move  = True   , no_resize = True, no_collapse = True, no_close = True ) as Atuacao_VG:
@@ -155,63 +155,68 @@ def init_visualizacaoGeral( windows : dict ):
     with dpg.window( label = 'Painel de log' , tag = 23_0, no_move  = True   , no_resize = True, no_collapse = True, no_close = True, no_title_bar = True ) as Painel_log_VG:
         windows["Visualizacao geral"].append( Painel_log_VG )
         
-        dpg.add_text('Informações gerais do sistema')
-        with dpg.child_window( autosize_x = True, height = 170, menubar = True):
-            with dpg.menu_bar( label = 'menubar para datetime',):
-                dpg.add_menu_item( label = 'Hora automática', callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, False), shortcut = 'A data e hora de calculo é definida automaticamente de acordo com a hora do controlador local')
-                dpg.add_menu_item( label = 'Hora manual'    , callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, True) , shortcut = 'A data e hora de calculo é definida pela entrada do operador no supervisório' )
+        dpg.add_text( default_value = 'Informações gerais do sistema')
+        
+        with dpg.child_window( tag = 23_00, autosize_x = True, height = 170, menubar = True):
+            with dpg.menu_bar( tag = 23_01, label = 'menubar para datetime',):
+                dpg.add_menu_item( tag = 23_02, label = 'Hora automática', callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, False), shortcut = 'A data e hora de calculo é definida automaticamente de acordo com a hora do controlador local')
+                dpg.add_menu_item( tag = 23_03, label = 'Hora manual'    , callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, True) , shortcut = 'A data e hora de calculo é definida pela entrada do operador no supervisório' )
 
-            with dpg.child_window( tag = 2_3_1_0):
+            with dpg.child_window( tag = 23_10):
                 #Informações gerais do sistema - Automático 
-                dpg.add_text('Hora automática')
-                dpg.add_drag_floatx( label = 'Ano/Mes/Dia Auto'  , tag = 2_3_1, size = 3, format = '%.0f', speed = 0.1 , min_value = 1   , max_value = 3000   , no_input = True )
-                dpg.add_drag_floatx( label = 'Hora/Min/Sec Auto' , tag = 2_3_2, size = 3, format = '%.0f', speed = 0.1 , no_input  = True                                                                             )
-                dpg.add_drag_int   ( label = 'Valor no dia'      , tag = 2_3_3, format = '%.0f'          , speed = 0.1 , min_value = 0   , max_value = 26*3600, no_input = True, source = TOT_SECONDS, enabled = False)
-                dpg.add_drag_int   ( label = 'Dia Juliano'       , tag = 2_3_4, format = '%.0f'          , speed = 0.1 , min_value = 0   , max_value = 366    , no_input = True, source = JULIANSDAY , enabled = False)
+                dpg.add_text( default_value = 'Hora automática')
+                dpg.add_drag_floatx( tag = 23_1, label = 'Ano/Mes/Dia Auto'  , size = 3, format = '%.0f', speed = 0.1 , min_value = 1   , max_value = 3000   , no_input = True )
+                dpg.add_drag_floatx( tag = 23_2, label = 'Hora/Min/Sec Auto' , size = 3, format = '%.0f', speed = 0.1 , no_input  = True                                                                             )
+                dpg.add_drag_int   ( tag = 23_3, label = 'Valor no dia'      , format = '%.0f'          , speed = 0.1 , min_value = 0   , max_value = 26*3600, no_input = True, source = TOT_SECONDS, enabled = False)
+                dpg.add_drag_int   ( tag = 23_4, label = 'Dia Juliano'       , format = '%.0f'          , speed = 0.1 , min_value = 0   , max_value = 366    , no_input = True, source = JULIANSDAY , enabled = False)
            
-            with dpg.child_window( tag = 2_3_2_0):
+            with dpg.child_window( tag = 23_20):
                 # Informações gerais do sistema - Manual  
-                dpg.add_text('Hora manual')
-                dpg.add_input_floatx( label = 'Ano/Mes/Dia Manual' , tag = 2_3_6, size = 3, default_value = [2020, 12, 25], format='%.0f', min_value = 1, max_value = 3000 )
-                dpg.add_input_floatx( label = 'Hora/Min/Sec Manual', tag = 2_3_7, size = 3, default_value = [20, 30, 10]  , format='%.0f', min_value = 1, max_value = 60   )
-                dpg.add_drag_int    ( label = 'Valor no dia'       , tag = 2_3_8, format = '%.0f', speed = 0.1 , min_value = 0, max_value = 24*3600, no_input = True, source = TOT_SECONDS, enabled = False )
-                dpg.add_drag_int    ( label = 'Dia Juliano'        , tag = 2_3_9, format = '%.0f', speed = 0.1 , min_value = 0, max_value = 366    , no_input = True, source = JULIANSDAY , enabled = False )
+                dpg.add_text( default_value = 'Hora manual')
+                dpg.add_input_floatx( tag = 23_6, label = 'Ano/Mes/Dia Manual' , size = 3, default_value = [2020, 12, 25], format='%.0f', min_value = 1, max_value = 3000 )
+                dpg.add_input_floatx( tag = 23_7, label = 'Hora/Min/Sec Manual', size = 3, default_value = [20, 30, 10]  , format='%.0f', min_value = 1, max_value = 60   )
+                dpg.add_drag_int    ( tag = 23_8, label = 'Valor no dia'       , format = '%.0f', speed = 0.1 , min_value = 0, max_value = 24*3600, no_input = True, source = TOT_SECONDS, enabled = False )
+                dpg.add_drag_int    ( tag = 23_9, label = 'Dia Juliano'        , format = '%.0f', speed = 0.1 , min_value = 0, max_value = 366    , no_input = True, source = JULIANSDAY , enabled = False )
 
-            dpg.hide_item( 2_3_2_0 ) if dpg.get_value(HORA_MANUAL) == False else dpg.hide_item( 2_3_1_0 )
+            dpg.hide_item( 23_20 ) if dpg.get_value(HORA_MANUAL) == False else dpg.hide_item( 2_3_1_0 )
         
         dpg.add_spacer( height = 5 )
         with dpg.child_window( tag = 2_3_3_0, autosize_x = True, autosize_y = True ): 
             # Definições de longitude e latitude local
-            with dpg.child_window( height = 90 ):
-                dpg.add_text('Definições de longitude e latitude local')
+            with dpg.child_window  ( height = 90 ):
+                dpg.add_text       ( default_value = 'Definições de longitude e latitude local')
                 dpg.add_input_float( label = 'Latitude' , tag = 2_3_10, min_value = -90, max_value = 90, format = '%3.8f', indent=0.01, source = LATITUDE , callback = lambda sender, data, user : SUN_DATA.set_latitude( data ) )
-                dpg.add_spacer( )
+                dpg.add_spacer     ( )
                 dpg.add_input_float( label = 'Longitude', tag = 2_3_11, min_value = -90, max_value = 90, format = '%3.8f', indent=0.01, source = LONGITUDE, callback = lambda sender, data, user : SUN_DATA.set_longitude( data ) )
             
             dpg.add_spacer( height = 5 )
             with dpg.child_window( height = 150 ): 
                 # Informações do sol 
-                dpg.add_text('Informacoes do sol')
-                dpg.add_drag_float( label = 'Azimute'      , tag = 2_3_12, format='%4.2f', speed=1, no_input= True, source = AZIMUTE )
-                dpg.add_spacer( )
-                dpg.add_drag_float( label = 'Altitude'     , tag = 2_3_13, format='%4.2f', speed=1, no_input= True, source = ZENITE )
-                dpg.add_spacer( )
-                dpg.add_drag_float( label = 'Elevação (m)' , tag = 2_3_14, format='%4.0f', speed=1, no_input= True, source = ALTITUDE )
-                dpg.add_spacer( )
-                dpg.add_drag_floatx( label = 'Horas de sol', tag = 2_3_15, size = 3, format='%.0f', no_input= True )
+                dpg.add_text       ( default_value = 'Informacoes do sol')
+                dpg.add_drag_float ( label = 'Azimute'      , tag = 23_12, format='%4.2f', speed=1, no_input= True, source = AZIMUTE )
+                dpg.add_spacer     ( )
+                dpg.add_drag_float ( label = 'Altitude'     , tag = 23_13, format='%4.2f', speed=1, no_input= True, source = ZENITE )
+                dpg.add_spacer     ( )
+                dpg.add_drag_float ( label = 'Elevação (m)' , tag = 23_14, format='%4.0f', speed=1, no_input= True, source = ALTITUDE )
+                dpg.add_spacer     ( )
+                dpg.add_drag_floatx( label = 'Horas de sol' , tag = 23_15, size = 3, format='%.0f', no_input= True )
             
             dpg.add_spacer( height = 5 )
             with dpg.child_window( height = 200 ):
                 # Posições de interesse
-                dpg.add_text("Posicoes de interesse", )
-                dpg.add_text('Nascer do sol (hh/mm/ss)')
+                dpg.add_text       ( default_value = "Posicoes de interesse", )
+                dpg.add_text       ( default_value = 'Nascer do sol (hh/mm/ss)')
                 dpg.add_drag_floatx( tag = 2_3_16, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNRISE     , data.extend([0]))  )
-                dpg.add_spacer( )
-                dpg.add_text('Culminante (hh/mm/ss)'   )
+                dpg.add_spacer     ( )
+                dpg.add_text       ( default_value = 'Culminante (hh/mm/ss)'   )
                 dpg.add_drag_floatx( tag = 2_3_17, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNSET      , data.extend([0]))  )
-                dpg.add_spacer( )
-                dpg.add_text('Por do sol (hh/mm/ss)'   )
+                dpg.add_spacer     ( )
+                dpg.add_text       ( default_value = 'Por do sol (hh/mm/ss)'   )
                 dpg.add_drag_floatx( tag = 2_3_18, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_CULMINANT, data.extend([0]))  )
+
+    dpg.hide_item( 21_0 )
+    dpg.hide_item( 22_0 )
+    dpg.hide_item( 23_0 )
 
 def resize_visualizacaoGeral( ):
     # get the main_window dimension 
@@ -222,13 +227,13 @@ def resize_visualizacaoGeral( ):
     dpg.configure_item( 23_0    , width = w/3 -20 , height    =  h - 30     , pos = [ w*2/3 +15, 25 ]        ) # LOG 
     
     # get the child_window_window dimension 
-    w1, h1 = dpg.get_item_width( 2_1_0 ), dpg.get_item_height( 2_1_0 ) 
-    dpg.configure_item( 2_1_1_0  , width = w1-20       , height    = h1-50                                        ) # DRAWLIST
+    w1, h1 = dpg.get_item_width( 21_0 ), dpg.get_item_height( 21_0 ) 
+    dpg.configure_item( 21_10  , width = w1-20       , height    = h1-50                                        ) # DRAWLIST
     update_sun_trajetory(     draw_id = 2_1_1_0    , parent_id = 2_1_0                                        ) # DRAWING 
 
     # SUNPATH ATT CHILD_WINDOW 
-    dpg.configure_item( 2_2_1_0  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ 5            , 20 ]    ) # GIRO
-    dpg.configure_item( 2_2_2_0  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ (w*2/3)//2 +5, 20 ]    ) # ELEVAÇÃO 
+    dpg.configure_item( 22_10  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ 5            , 20 ]    ) # GIRO
+    dpg.configure_item( 22_20  , width = (w/3)-15    , height    = (h*2/5)*0.8 , pos = [ (w*2/3)//2 +5, 20 ]    ) # ELEVAÇÃO 
 
 def render_visualizacaoGeral( ):
     global TOT_SECONDS , JULIANSDAY, HORA_MANUAL

@@ -3,6 +3,8 @@ from   connections.serial   import *
 from   registry             import * 
 from   themes               import *
 
+import datetime as dt 
+
 # FUNCTIONS 
 def change_menubar_cmd( sender, data, user ):
     dpg.set_value( CMD_MODE, user )
@@ -45,7 +47,7 @@ def init_atuador( windows : dict ):
         dpg.add_text('CONFIGURAÇÕES DE COMUNICAÇÃO')
         dpg.add_text('Selecione a porta serial: ')
         with dpg.group( horizontal = True ):
-            dpg.add_combo( tag = 42_1, default_value = 'COM12', items = ['COM1', 'COM4', 'COM5', 'COM10', 'COM12', 'COM15', 'COM16'], source = SERIAL_PORT )
+            dpg.add_combo( tag = 42_1, default_value = 'COM12', items = ['COM1', 'COM4', 'COM5', 'COM10', 'COM12', 'COM15', 'COM16', 'COM20'], source = SERIAL_PORT )
             dpg.add_button(  tag = 42_1_1, label = 'Refresh', callback = serial_refresh )
         dpg.add_spacer( height = 1 )
 
@@ -85,26 +87,44 @@ def init_atuador( windows : dict ):
                 dpg.add_menu_item( label = "Motor Trifásico" , callback = change_menubar_motors, user_data = 'trif' )
 
             # DE PASSO 
+            def send_motor_conf( sender, data, user ): 
+                if user == 'MG': 
+                    s  = dpg.get_value( MG_STEPS )
+                    us = int(dpg.get_value( MG_USTEP ).replace('1/', ''))
+                    dpg.set_value( MG_RESOLUCAO, s/us )
+                    COMP.write_holdings( COMP.HR_GIR_STEP, [int(s), int(us)] )
+                elif user == 'ME': 
+                    s  = dpg.get_value( ME_STEPS )
+                    us = int(dpg.get_value( ME_USTEP ).replace('1/', ''))
+                    dpg.set_value( ME_RESOLUCAO, s/us )
+                    COMP.write_holdings( COMP.HR_ELE_STEP, [int(s), int(us)] ) 
+
+                elif user == 'MTGIR':
+                    pass 
+                
+                elif user == 'MTELE':
+                    pass
+
             with dpg.child_window( tag = 43_2_0, autosize_x =True, autosize_y = True): 
                 dpg.add_text('DEFINIÇÃO DOS MOTORES DE PASSO')
                 dpg.add_spacer(  height = 15 )
-                with dpg.child_window( tag = 43_2_1_0, label = 'MotorGiro'    , autosize_x=True, height = 200 ):
-                    dpg.add_text       ( "Motor de Rotação da base - Motor G" )
-                    dpg.add_text       ( 'Resolução:' )
-                    dpg.add_input_float( tag = 43_2_1_1, default_value = 1.8    , format = '%3.2f', source = MG_RESOLUCAO, callback = serial_write_message, user_data = 'Gir', on_enter = True )
-                    dpg.add_text       ( 'Micro Passos do motor:' )
-                    dpg.add_combo      ( id=43_2_1_3, default_value = '1/16'    , items  = ['1', '1/2', '1/4', '1/8', '1/16', '1/32'], source = MG_USTEP, callback= serial_write_message, user_data = 'Gir' )
-                    dpg.add_text       ( 'Passos por volta:' )
-                    dpg.add_drag_float ( tag = 43_2_1_2, default_value =  360 / 1.8, format = '%5.2f', source = MG_STEPS, no_input = True, callback= serial_write_message, user_data = 'Gir' )
+                with dpg.child_window  ( tag = 43_21_0, label = 'MotorGiro'    , autosize_x=True, height = 190 ):
+                    dpg.add_text       ( default_value = "Motor de Rotação da base - Motor G" )
+                    dpg.add_text       ( default_value = 'Resolução:' )
+                    dpg.add_input_float( tag = 43_21_1, default_value = 1.8    , format = '%3.2f', source = MG_STEPS, callback = send_motor_conf, user_data = 'MG', on_enter = True )
+                    dpg.add_text       ( default_value = 'Micro Passos do motor:' )
+                    dpg.add_combo      ( tag = 43_21_3, default_value = '1/16'    , items  = ['1', '1/2', '1/4', '1/8', '1/16', '1/32'], source = MG_USTEP, callback= send_motor_conf, user_data = 'MG' )
+                    dpg.add_text       ( default_value = 'Passos por volta:' )
+                    dpg.add_drag_float ( tag = 43_21_2, default_value =  360 / 1.8, format = '%5.2f', source = MG_RESOLUCAO, no_input = True, callback= send_motor_conf, user_data = 'MG' )
             
-                with dpg.child_window( tag = 43_2_2_0, label = 'MotorElevação', autosize_x=True, height = 200 ):
-                    dpg.add_text       ( "Motor de Rotação da base - Motor 2")
-                    dpg.add_text       ( 'Resolução:')
-                    dpg.add_input_float( tag = 43_2_2_1, default_value = 1.8      , format = '%3.2f', source = ME_RESOLUCAO, callback = serial_write_message, user_data = 'Ele', on_enter = True )
-                    dpg.add_text       ( 'Micro Passos do motor:')
-                    dpg.add_combo      ( tag = 43_2_2_3, default_value = '1/16'   , items  = ['1', '1/2', '1/4', '1/8', '1/16', '1/32'], source = ME_USTEP, callback= serial_write_message, user_data = 'Ele' ) 
-                    dpg.add_text       ( 'Passos por volta:')
-                    dpg.add_drag_float ( tag = 43_2_2_2, default_value = 360 / 1.8, format ='%5.2f', source = ME_STEPS, no_input = True, callback = serial_write_message, user_data = 'Ele'  )
+                with dpg.child_window  ( tag = 43_22_0, label = 'MotorElevação', autosize_x=True, height = 190 ):
+                    dpg.add_text       ( default_value = "Motor de Rotação da base - Motor 2")
+                    dpg.add_text       ( default_value = 'Resolução:')
+                    dpg.add_input_float( tag = 43_22_1, default_value = 1.8      , format = '%3.2f', source = ME_STEPS, callback = send_motor_conf, user_data = 'ME', on_enter = True )
+                    dpg.add_text       ( default_value = 'Micro Passos do motor:')
+                    dpg.add_combo      ( tag = 43_22_3, default_value = '1/16'   , items  = ['1', '1/2', '1/4', '1/8', '1/16', '1/32'], source = ME_USTEP, callback= send_motor_conf, user_data = 'ME' ) 
+                    dpg.add_text       ( default_value = 'Passos por volta:')
+                    dpg.add_drag_float ( tag = 43_22_2, default_value = 360 / 1.8, format ='%5.2f', source = ME_RESOLUCAO, no_input = True, callback = send_motor_conf, user_data = 'ME'  )
         
             # TRIFÁSICO 
             with dpg.child_window( tag = 43_3_0, autosize_x=True, autosize_y=True ):
@@ -114,18 +134,18 @@ def init_atuador( windows : dict ):
                 with dpg.child_window( tag = 43_3_1_0, label = 'MotorGiro'    ,autosize_x = True, height = 100 ):
                     dpg.add_text       ( "Motor de Rotação da base - Motor 1" )
                     dpg.add_spacer     ( )
-                    dpg.add_button     ( tag = 43_3_1_1, label= 'Desligado'  ,  width = 250, callback = serial_write_message, user_data='m1')
+                    dpg.add_button     ( tag = 43_3_1_1, label= 'Desligado'  ,  width = 250, callback = send_motor_conf, user_data='MTGIR')
                     dpg.add_text       ( 'Velocidade angular MG:' )
-                    dpg.add_input_float( tag = 43_3_1_2, label = 'Wo (rad/s)', default_value = dpg.get_value(MG_VELANG), source = MG_VELANG, format = '%3.2f', on_enter = True, callback = serial_write_message )
+                    dpg.add_input_float( tag = 43_3_1_2, label = 'Wo (rad/s)', default_value = dpg.get_value(MG_VELANG), source = MG_VELANG, format = '%3.2f' )
                     # CORRIGIR A TROCA DE MENSAGEM PARA AJUSTAR AS VELOCIDADES
                 
                 dpg.add_spacer    ( height = 15 )
                 with dpg.child_window( tag = 43_3_2_0, label = 'MotorElevação',autosize_x = True, height = 125 ):
                         dpg.add_text       ( "Motor de Rotação da base - Motor 2")
                         dpg.add_spacer     ( )
-                        dpg.add_button     ( tag = 43_3_2_1, label='Desligado', width=250, callback = serial_write_message, user_data='m2')
+                        dpg.add_button     ( tag = 43_3_2_1, label='Desligado', width=250, callback = send_motor_conf, user_data='MTELE')
                         dpg.add_text       ( 'Velocidade angular ME:' )
-                        dpg.add_input_float( tag = 43_3_2_2, label = 'Wo (rad/s)', default_value = dpg.get_value(ME_VELANG), source = ME_VELANG, format = '%3.2f', on_enter = True, callback = serial_write_message )
+                        dpg.add_input_float( tag = 43_3_2_2, label = 'Wo (rad/s)', default_value = dpg.get_value(ME_VELANG), source = ME_VELANG, format = '%3.2f' )
 
             change_menubar_motors( None, None, 'step')
             
@@ -160,16 +180,16 @@ def init_atuador( windows : dict ):
         windows['Atuadores'].append( draw_tracker_AT )  
     
         def change_menubar_conf( sender, data, user ): 
-            dpg.hide_item(46_1_1_1_0)
-            dpg.hide_item(46_1_1_2_0)
-            dpg.hide_item(46_1_1_3_0)
-            dpg.hide_item(46_1_1_4_0)
-            dpg.hide_item(46_1_1_5_0)
-            if   user == "State":     dpg.show_item(46_1_1_1_0)   
-            elif user == "Power":     dpg.show_item(46_1_1_2_0)   
-            elif user == "Date/Time": dpg.show_item(46_1_1_3_0)   
-            elif user == "Control":   dpg.show_item(46_1_1_4_0)   
-            elif user == "Diagnosis": dpg.show_item(46_1_1_5_0)   
+            dpg.hide_item(46_11_10)
+            dpg.hide_item(46_11_20)
+            dpg.hide_item(46_11_30)
+            dpg.hide_item(46_11_40)
+            dpg.hide_item(46_11_50)
+            if   user == "State":     dpg.show_item(46_11_10)   
+            elif user == "Power":     dpg.show_item(46_11_20)   
+            elif user == "Date/Time": dpg.show_item(46_11_30)   
+            elif user == "Control":   dpg.show_item(46_11_40)   
+            elif user == "Diagnosis": dpg.show_item(46_11_50)   
 
         with dpg.group( horizontal = True):
             with dpg.child_window(tag = 46_1_0, width = (dpg.get_item_width(46_0)*0.4), border = False, menubar = True):
@@ -182,94 +202,221 @@ def init_atuador( windows : dict ):
                     dpg.add_menu_item( label = "Diagnosis"   , callback = change_menubar_conf, user_data = "Diagnosis" )
             
                 # STATES 
-                with dpg.child_window( tag = 46_1_1_1_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITSS')
-                        dpg.add_text('S -> Parar o tracker')
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITSD')
-                        dpg.add_text('D -> Entra no modo Demo')
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITSC')
-                        dpg.add_text('C -> Continuar processo')
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITSL')
-                        dpg.add_text('L -> Levers')  
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITSA')
-                        dpg.add_text('A -> Automatic')  
+                with dpg.child_window( tag = 46_11_10, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
+                    with dpg.child_window ( tag = 46_11_111, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_112, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_113, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.AUTOMATIC ) )
+                            dpg.add_text  ( tag = 46_11_114, default_value = 'Estado AUTOMÁTICO (A)')  
+                        with dpg.tooltip  ( tag = 46_11_115, parent = dpg.last_item() ): 
+                            dpg.add_text  ( tag = 46_11_116, default_value = 'Entra no estado de operação automático' )
+                    
+                    with dpg.child_window ( tag = 46_11_121, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_122, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_123, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.MANUAL ))
+                            dpg.add_text  ( tag = 46_11_124, default_value = 'Estado MANUAL (L)')  
+                        with dpg.tooltip  ( tag = 46_11_125, parent = dpg.last_item() ): 
+                            dpg.add_text  ( tag = 46_11_126, default_value = 'O Tracker passa a ser acionado pelo movimento manual dos Levers\npresos ao próprio Tracker.' )
                 
+                    with dpg.child_window ( tag = 46_11_131, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_132, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_133, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.DEMO ))
+                            dpg.add_text  ( tag = 46_11_134, default_value = 'Estado DEMO (D)')
+                        with dpg.tooltip  ( tag = 46_11_135, parent = dpg.last_item() ): 
+                            dpg.add_text  ( tag = 46_11_136, default_value = 'Entra no modo de demonstração de movimento.\nO tracker inicia o movimento começando pelo inicio do dia!' )
+                    
+                    with dpg.child_window ( tag = 46_11_141, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_142, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_143, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.AUTOMATIC ))
+                            dpg.add_text  ( tag = 46_11_144, default_value = 'Estado PROCESS (C)')
+                        with dpg.tooltip  ( tag = 46_11_145, parent = dpg.last_item() ): 
+                            dpg.add_text  ( tag = 46_11_146, default_value = 'Volta para o estado de operação definido anteriormente.\nSó irá funcionar caso o Tracker tenha entrado em algum estado de \noperação diferente do atuomático ou remoto.' )
+                    
+                    with dpg.child_window ( tag = 46_11_151, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_152, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_153, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.IDLE ))
+                            dpg.add_text  ( tag = 46_11_154, default_value = 'Estado IDLE (S)')
+                        with dpg.tooltip  ( tag = 46_11_155, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_156, default_value = 'Coloca o Tracker em modo de espera. Ele não muda nenhum estado de operação, apenas entra em loop' )
+                    
+                    with dpg.child_window ( tag = 46_11_161, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_162, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_163, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.RESET  ))
+                            dpg.add_text  ( tag = 46_11_164, default_value = 'Estado RESET (R)')
+                        with dpg.tooltip  ( tag = 46_11_165, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_166, default_value = 'O Tracker irá dar reboot!' )
+
                 # POWER 
-                with dpg.child_window( tag = 46_1_1_2_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITWO')
-                        dpg.add_text('O -> Ativar motores')
-
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data='INITWF')
-                        dpg.add_text('F -> Desativar motores ')
+                with dpg.child_window( tag = 46_11_20, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
+                    with dpg.child_window ( tag = 46_11_211, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_212, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_213, label='send', callback = lambda s, d, u : COMP.write_coils( COMP.COIL_POWER, True) )
+                            dpg.add_text  ( tag = 46_11_214, default_value = ' Ativar motores (O)')
+                        with dpg.tooltip  ( tag = 46_11_215, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_216, default_value =  'Para ligar os motores, o Tracker conta com um sistema eletromecânico de acionamento\nAo enviar "O" o sistema ira ligar.\nAo enviar "F" o sistema iá desligar.')
                     
+                    with dpg.child_window ( tag = 46_11_221, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_222, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_223, label='send', callback = lambda s, d, u : COMP.write_coils( COMP.COIL_POWER, False ))
+                            dpg.add_text  ( tag = 46_11_224, default_value = 'Desativar motores (F)')
+                        with dpg.tooltip  ( tag = 46_11_225, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_226, default_value = 'Para ligar os motores, o Tracker conta com um sistema eletromecânico de acionamento\nAo enviar "O" o sistema ira ligar.\nAo enviar "F" o sistema iá desligar.')
+                            
                 # DATA E HORA
-                with dpg.child_window( tag = 46_1_1_3_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
-                    dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITH' )
-                    dpg.group( horizontal = True )
-                    dpg.add_text('H -> Trocar a hora')
-                
-                    dpg.add_input_intx( tag =46_1_1_1, size=3, default_value=[ 12, 5, 2021 ], max_value = 99, callback = serial_write_message, user_data = 'INITH', on_enter = True )
-                    dpg.group( horizontal = True )
-                    dpg.add_text('dd/mm/yy')
-                
-                    dpg.add_input_intx( tag =46_1_1_2, size=3, default_value=[ 15, 35, 10  ], max_value = 60, callback = serial_write_message, user_data = 'INITH', on_enter = True ) 
-                    dpg.group( horizontal = True )
-                    dpg.add_text('hh:mm:ss') 
+                with dpg.child_window( tag = 46_11_30, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
+                    def send_data( sender, data, user ):
+                        if user == 'IN':
+                            data = [] 
+                            for val in dpg.get_value( 46_11_1 )[:3]: data.append( int(val) )
+                            for val in dpg.get_value( 46_11_2 )[:3]: data.append( int(val) )
+                            data[0] = data[0] - 2000 if data[0] > 2000 else data[0]
+                            if   data[1] > 12: return 0       
+                            elif data[2] > 31: return 0
+                            elif data[3] > 60: return 0
+                            elif data[4] > 60: return 0
+                            elif data[5] > 23: return 0
+                            dpg.set_value( HORA_MANUAL, True )
+                        elif user == 'NOW':
+                            now = dt.datetime.now() 
+                            data = [ now.year if now.year < 2000 else now.year - 2000, now.month, now.day, now.hour, now.minute, now.second ]
+                            dpg.set_value( HORA_MANUAL, False )
+                        COMP.write_holdings( COMP.HR_YEAR, data )
 
-                    with dpg.group( horizontal = True ):
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITHA' )
-                        dpg.add_text('HA -> Enviar datetime atual')
-
-                
+                    with dpg.child_window       ( tag = 46_11_311, width = -1, height = 110 ):
+                        with dpg.group          ( tag = 46_11_312, horizontal = True ): 
+                            dpg.add_button      ( tag = 46_11_313, label='send', callback = send_data, user_data = 'IN'  )
+                            dpg.add_text        ( tag = 46_11_314, default_value = 'Enviar hora (H)')
+                        with dpg.group          ( tag = 46_11_315, horizontal = True ): 
+                            dpg.add_input_floatx( tag = 46_11_1  , size = 3, source = 23_6, format = '%.0f', max_value = 99, callback = send_data, on_enter = True, user_data = 'IN' )
+                            dpg.add_text        ( tag = 46_11_317, default_value = 'yy/mm/dd')
+                        with dpg.group          ( tag = 46_11_318, horizontal = True ): 
+                            dpg.add_input_floatx( tag = 46_11_2  , size = 3, source = 23_7, format = '%.0f', max_value = 60, callback = send_data, on_enter = True, user_data = 'IN' ) 
+                            dpg.add_text        ( tag = 46_11_320, default_value = 'hh:mm:ss') 
+                        
+                    with dpg.child_window ( tag = 46_11_21, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_22, horizontal = True ):
+                            dpg.add_button( tag = 46_11_23, label='send', callback = send_data, user_data = 'NOW' )
+                            dpg.add_text  ( tag = 46_11_24, default_value = 'Enviar datetime atual (HA)')
+                     
                 # CONTROL 
-                with dpg.child_window( tag = 46_1_1_4_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
-                    with dpg.group( horizontal = True ):
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITCp' )
-                        dpg.add_text('P -> Configurar variáveis de processo')
-                    dpg.add_input_float ( tag = 46_1_1_4_1, default_value = 0.5, max_value=1, on_enter = True, callback = serial_write_message, user_data = 'INITCp' )
-                    with dpg.group( horizontal = True):
-                        dpg.add_radio_button( tag = 46_1_1_4_21, items = ['Gir', 'Ele'], default_value = 'Gir', horizontal = True ) 
-                        dpg.add_radio_button( tag = 46_1_1_4_22, items = ['D','I','P'], default_value = 'D', horizontal = True ) 
+                with dpg.child_window( tag = 46_11_40, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
+                    def send_control( sender, data, user ) : 
+                        if user == 'BOTH': 
+                            gir, ele = dpg.get_value(46_11_43)[0], dpg.get_value(46_11_43)[1]
+                            COMP.write_holdings( COMP.HR_PV_MOTOR_GIR, gir )
+                            COMP.write_holdings( COMP.HR_PV_MOTOR_ELE, ele )
 
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITCM' )
-                        dpg.add_text('M -> Mover ambos motores')
-                    dpg.add_input_floatx( tag = 46_1_1_4_3, size=2, default_value=[ 12.05, 19.99], on_enter = True, callback = serial_write_message, user_data = 'INITMO')
+                        elif user == 'SINGLE': 
+                            if dpg.get_value(46_1_1_4_5) == 'Gir': 
+                                COMP.write_holdings( COMP.HR_PV_MOTOR_GIR, dpg.get_value(46_1_1_4_4) )
+                            else: 
+                                COMP.write_holdings( COMP.HR_PV_MOTOR_ELE, dpg.get_value(46_1_1_4_4) )
+
+                        elif user == 'PV': 
+                            COMP.write_holdings( COMP.HR_AZIMUTE , dpg.get_value( AZIMUTE  ) ) 
+                            COMP.write_holdings( COMP.HR_ALTITUDE, dpg.get_value( ALTITUDE ) ) 
+
+                        elif user == 'PID': 
+                            PARAM = dpg.get_value( 46_11_422 )
+                            VALUE = dpg.get_value(46_1_1_4_1)
+                            if dpg.get_value(46_11_45) == 'Gir': 
+                                if   PARAM == 'P':  COMP.write_holdings( COMP.HR_KP_GIR, VALUE ) 
+                                elif PARAM == 'D':  COMP.write_holdings( COMP.HR_KD_GIR, VALUE )  
+                                elif PARAM == 'I':  COMP.write_holdings( COMP.HR_KI_GIR, VALUE )
+                            else:
+                                if   PARAM == 'P':  COMP.write_holdings( COMP.HR_KP_ELE, VALUE ) 
+                                elif PARAM == 'D':  COMP.write_holdings( COMP.HR_KD_ELE, VALUE )  
+                                elif PARAM == 'I':  COMP.write_holdings( COMP.HR_KI_ELE, VALUE )
+                    with dpg.child_window       ( tag = 46_11_410, width = -1, height = 85 ):
+                        with dpg.group          ( tag = 46_11_411, horizontal = True ):
+                            dpg.add_button      ( tag = 46_11_412, label = 'send', callback = send_control, user_data = 'PID' )
+                            dpg.add_text        ( tag = 46_11_413, default_value = 'Configurar variáveis de processo (P)')
+                        with dpg.tooltip        ( tag = 46_11_414, parent = dpg.last_item() ):
+                            dpg.add_text        ( tag = 46_11_415, default_value = 
+                            'Configura as variáveis de processo::\n' +
+                            '\tP = Proporcional:: \n\t\tCausa uma variação da posição em função do erro.\n' +
+                            '\tD = Derivativo:: \n\t\tCausa uma varição proporcional à inclinação do erro.\n' + 
+                            '\tI = Integrativo:: \n\t\tCausa uma variação proporcional ao tempo de correção.\n' +
+                            '\nCada motor pode possuir um parâmetro próprio de correção. ')
+
+                        with dpg.group          ( tag = 46_11_420, horizontal = True):
+                            dpg.add_radio_button( tag = 46_11_421, items = ['Gir', 'Ele'], default_value = 'Gir', horizontal = True ) 
+                            dpg.add_spacer( width = 25 )
+                            dpg.add_radio_button( tag = 46_11_422, items = ['D','I','P'] , default_value = 'D'  , horizontal = True ) 
+                        dpg.add_input_float     ( tag = 46_11_41 , width = -1            , default_value = 0.5  , max_value = 1 , on_enter   = True, callback = send_control, user_data = 'PID' )
+
+                    with dpg.child_window   ( tag = 46_11_430, width = -1, height = 60   ): 
+                        with dpg.group      ( tag = 46_11_431, horizontal = True ): 
+                            dpg.add_button  ( tag = 46_11_432, label ='send', callback = send_control, user_data = 'BOTH' )
+                            dpg.add_text    ( tag = 46_11_433, default_value = 'Mover ambos motores (M)')
+                        with dpg.tooltip    ( tag = 46_11_434, parent = dpg.last_item() ): 
+                            dpg.add_text    ( tag = 46_11_435, default_value = 'Envia os valores de angulos para os motores:\nDireita(Giro)\nEsquerda(Elevação)\n\nDigite o valor de cada angulo, pressione enter para validar e aperte no botão send para enviar\nEvita o envio acidental de angulos errados')
+                        dpg.add_input_floatx( tag = 46_11_43 , width = -1, size = 2, default_value = [ 125, 45.5], on_enter = True, callback = send_control, user_data = 'BOTH')
                  
-                    with dpg.group( horizontal = True ):
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITCm' )
-                        dpg.add_text('m -> Mover um motore')
-                    dpg.add_input_float ( tag = 46_1_1_4_4, default_value = 12, on_enter = True, callback = serial_write_message, user_data = 'INITCm' )
-                    dpg.add_radio_button( tag = 46_1_1_4_5, items = ['Gir', 'Ele'], default_value = 'Gir', horizontal = True ) 
+                    with dpg.child_window   ( tag = 46_11_440, width = -1, height = 85  ): 
+                        with dpg.group      ( tag = 46_11_441, horizontal = True ):
+                            dpg.add_button  ( tag = 46_11_442, label='send', callback = send_control, user_data = 'SINGLE' )
+                            dpg.add_text    ( tag = 46_11_443, default_value ='Mover um motor (m)')
+                        with dpg.tooltip    ( tag = 46_11_444, parent = dpg.last_item() ): 
+                            dpg.add_text    ( tag = 46_11_445, default_value = 'Envia os valores de um angulo de motor.\nSelecione o motor pelo radio button gir e ele.\n\nDigite o valor do angulo, pressione enter para validar e aperte no botão send para enviar\nEvita o envio acidental de um angulo errado')
+                        dpg.add_input_float ( tag = 46_11_44 , width = -1, default_value = 12, on_enter = True, callback = send_control, user_data = 'SINGLE' )
+                        dpg.add_radio_button( tag = 46_11_45 , items = ['Gir', 'Ele'], default_value = 'Gir', horizontal = True ) 
                     
-                    with dpg.group( horizontal = True ): 
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITCP' )
-                        dpg.add_text("P -> Envia Zenite e Azimute como PV")
-                    
+                    with dpg.child_window ( tag = 46_11_460, width = -1, height = 37  ): 
+                        with dpg.group    ( tag = 46_11_461, horizontal = True ): 
+                            dpg.add_button( tag = 46_11_462, label='send', callback = send_control, user_data = 'PV' )
+                            dpg.add_text  ( tag = 46_11_463, default_value = "Enviar Zenite e Azimute local (PV)")
+                    with dpg.tooltip      ( tag = 46_11_464, parent = dpg.last_item() ): 
+                            dpg.add_text  ( tag = 46_11_465, default_value = 'Envia os valores de Azimute e Zenite mostrados nos plots (Hora calculada - Manual ou Automática!) ')
+
                 # DIAGNÓSTICO 
-                with dpg.child_window( tag = 46_1_1_5_0, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
-                    with dpg.group( horizontal = True ):    
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITPA')
-                        dpg.add_text('A -> All info')
-                    with dpg.group( horizontal = True ):    
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITPS')
-                        dpg.add_text('S -> Sensor Diagnosis')
-                    with dpg.group( horizontal = True ):    
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITPP')
-                        dpg.add_text('P -> Print Positions')
-                    with dpg.group( horizontal = True ):    
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITPZ')
-                        dpg.add_text('Z -> Zenite')
-                    with dpg.group( horizontal = True ):    
-                        dpg.add_button(label='send', callback = serial_write_message, user_data = 'INITPH')
-                        dpg.add_text('H -> Altitude')
+                with dpg.child_window( tag = 46_11_50, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
+                    def get_diagnosis( sender, data, user ):
+                        print( 'implementar o get_diagnosiss') 
+                    with dpg.child_window ( tag = 46_11_511, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_512, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_513, label = 'send', callback = get_diagnosis, user_data = 'INITPA')
+                            dpg.add_text  ( tag = 46_11_514, default_value = 'Todas informações (A)')
+                        with dpg.tooltip  ( tag = 46_11_515, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_516, default_value = 'Printa todas as informações listadas abaixo de uma só vez')
+
+                    with dpg.child_window ( tag = 46_11_521, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_522, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_523, label='send', callback = get_diagnosis, user_data = 'INITPS')
+                            dpg.add_text  ( tag = 46_11_524, default_value = 'Diagnostico dos sensores (S)')
+                        with dpg.tooltip  ( tag = 46_11_525, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_526, default_value = 'Printa o diagnóstico dos sensore::\n\tNúmero de erros\n\tImprecisão do imã\n\tEstado da conexão')
+                    
+                    with dpg.child_window ( tag = 46_11_531, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_532, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_533, label = 'send', callback = get_diagnosis, user_data = 'INITPP')
+                            dpg.add_text  ( tag = 46_11_534, default_value = 'Diagnóstico de posições (P)')
+                        with dpg.tooltip  ( tag = 46_11_535, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_536, default_value = 'Printa as informações de posição medidas::\n\tDevio padrão das medições')
+                    
+                    with dpg.child_window ( tag = 46_11_541, width = -1, height = 37 ):
+                        with dpg.group    ( tag = 46_11_542, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_543, label='send', callback = get_diagnosis, user_data = 'INITPD')
+                            dpg.add_text  ( tag = 46_11_544, default_value = 'Diagnóstico de date e hora (D)')
+                        with dpg.tooltip  ( tag = 46_11_545, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_546, default_value = 'Printa os valores de correção de data e hora::\n\tHora do tracker\n\tCorreções de hora feitas')
+                    
+                    with dpg.child_window ( tag = 46_11_551, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_552, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_553, label='send', callback = get_diagnosis, user_data = 'INITPU')
+                            dpg.add_text  ( tag = 46_11_554, default_value = 'Diagnóstico de serial (U)')
+                        with dpg.tooltip  ( tag = 46_11_555, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_556, default_value = 'Printa informações de pacotes não recebidos')
+
+                    with dpg.child_window ( tag = 46_11_561, width = -1, height = 37 ): 
+                        with dpg.group    ( tag = 46_11_562, horizontal = True ):    
+                            dpg.add_button( tag = 46_11_563, label='send', callback = get_diagnosis, user_data = 'INITPC')
+                            dpg.add_text  ( tag = 46_11_564, default_value = 'Checar se a hora esta sincronizada (C)')
+                        with dpg.tooltip  ( tag = 46_11_565, parent = dpg.last_item() ):
+                            dpg.add_text  ( tag = 46_11_566, default_value = 'Verifica a possibilidade da hora do tracker estar errada e precisar de sincronização\nEsse é um problema que normalmente é corrigido automaticamento, no entanto, nada impede de ser feito manualmente')
+
+                    with dpg.child_window ( tag = 46_11_671, width = -1, height = -1 ):
+                        dpg.add_text      ( tag = 46_11_672, default_value = 'Nice')
+
                 change_menubar_conf( None, None, 'State')
 
             with dpg.child_window( tag = 46_2_0, width= (dpg.get_item_width(46_0)*0.6), autosize_y = True, border = False, menubar = True ):
@@ -282,12 +429,6 @@ def init_atuador( windows : dict ):
                     dpg.add_text( 'CMD:')     
                     dpg.add_text( tag = 46_2_1_1, default_value = 'DESCONECTADO!', tracked = True, track_offset = 1, )
                 
-                with dpg.child_window     ( tag   = 46_2_2_0  , autosize_x = True , pos=[0, dpg.get_item_height(46_0)-54] ):
-                    with dpg.group        ( tag   = 46_2_2_1_0, horizontal = True ):
-                        dpg.add_text      ( tag   = 46_2_2_1  , default_value =  "To send: "    )
-                        dpg.add_input_text( tag   = 46_2_2_2  , on_enter =  True , callback = serial_write_message, user_data = 'manual_send' )
-                        dpg.add_button    ( label = 'send'    , callback =  serial_write_message, user_data = 'manual_send' )
-    
     # Aply handlers 
     handlers_and_themes_atuador()
 
@@ -299,23 +440,23 @@ def resize_atuador():
     dpg.configure_item( 46_0     , width  = cw*995, height = ch*480, pos = [cw*470, ch*360] ) #[995, 480] -> Draw 
     dpg.configure_item( 46_1_0   , width  = (cw*995)*0.4     ) 
     dpg.configure_item( 46_2_0   , width  = (cw*995)*0.575   )
-    dpg.configure_item( 46_2_1_0 , height = (cw*480)-100     )
-    dpg.configure_item( 46_2_2_0 , pos    = [0, (cw*480)-54] )
-    dpg.configure_item( 46_2_2_2 , width  = (cw*995)*0.525   )
+    dpg.configure_item( 46_2_1_0 , height = (cw*480)-77      )
+
     # Zenite / Altitude Draw    45_0 
     dpg.configure_item( 45_0  , width = cw*495, height = ch*330, pos = [cw*970, ch*25 ] ) #[495, 330] -> Zenite 
     dpg.configure_item( 45_1_0, width = cw*478, height = ch*312 )
+    
     # Azimute Draw              44_0
     dpg.configure_item( 44_0  , width = cw*495, height = ch*330, pos = [cw*470, ch*25 ] ) #[495, 330] -> Azimue
     dpg.configure_item( 44_1_0, width = cw*478, height = ch*312 )
+    
     # Step Motors Config        43_0 
     dpg.configure_item( 43_0, width = cw*455, height = ch*520, pos = [cw*10 , ch*320] ) #[455, 480] -> Motores
+    
     # Serial Config             42_0 
     dpg.configure_item( 42_0, width = cw*455, height = ch*298, pos = [cw*10 , ch*25 ] ) #[455, 330] -> Serial
 
 def render_atuador() : 
-    serial_verify_connection()
-    serial_atualize_actuator_cmd()
-
-    
-
+    #serial_verify_connection()
+    #serial_atualize_actuator_cmd()
+    pass 
