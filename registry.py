@@ -128,8 +128,8 @@ with dpg.value_registry( ) as registries:
     SERIAL_CONNECTED = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_38 ) 
     SERIAL_PORT      = dpg.add_string_value( parent = registries, default_value = 'COM12'             , tag = 99_99_39 )
     SERIAL_BAUDRATE  = dpg.add_string_value( parent = registries, default_value = '115200'            , tag = 99_99_40 )
-    SERIAL_TIMEOUT   = dpg.add_int_value   ( parent = registries, default_value = 1                   , tag = 99_99_41 )
-
+    SERIAL_TIMEOUT   = dpg.add_int_value   ( parent = registries, default_value = 150                 , tag = 99_99_41 )
+    SERIAL_SLAVE     = dpg.add_int_value   ( parent = registries, default_value = 18                  , tag = 99_99_42 )
 
     DAY2COMPUTE      = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_99_38 )
     TCP_CONNECTED    = dpg.add_bool_value  ( parent = registries, default_value = False               , tag = 99_99_99_39 ) 

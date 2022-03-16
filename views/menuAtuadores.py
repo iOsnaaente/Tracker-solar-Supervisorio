@@ -1,9 +1,11 @@
 import dearpygui.dearpygui  as dpg
+
 from   connections.serial   import * 
 from   registry             import * 
 from   themes               import *
 
 import datetime as dt 
+
 
 # FUNCTIONS 
 def change_menubar_cmd( sender, data, user ):
@@ -22,7 +24,8 @@ def change_menubar_cmd( sender, data, user ):
                 MSG += '\n'
         dpg.set_value( 46_2_1_1, MSG )
 
-# MAIN FUNCTIONS 
+
+# HANDLERS AND THEMES
 def handlers_and_themes_atuador():
     dpg.bind_item_theme( item = 43_2_0  , theme = theme_no_border  )
     dpg.bind_item_theme( item = 43_2_1_0, theme = theme_no_border )
@@ -38,6 +41,8 @@ def handlers_and_themes_atuador():
     dpg.hide_item( 45_0)
     dpg.hide_item( 46_0)
 
+
+# MAIN FUNCTIONS 
 def init_atuador( windows : dict ): 
     # Serial Config 
     with dpg.window( label = 'Serial' , tag = 42_0, width= 455, height= 330, pos = [10,25], no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True) as serial_AT: 
@@ -51,12 +56,16 @@ def init_atuador( windows : dict ):
             dpg.add_button(  tag = 42_1_1, label = 'Refresh', callback = serial_refresh )
         dpg.add_spacer( height = 1 )
 
-        dpg.add_text('Baudarate: ')
+        dpg.add_text('Baudarate (COM): ')
         dpg.add_combo( tag = 42_2, default_value = '115200', items=[ '9600', '19200', '57600', '115200', '1000000'], source = SERIAL_BAUDRATE )
         dpg.add_spacer( height = 1 )
 
-        dpg.add_text('Timeout: ')
-        dpg.add_input_int( tag = 42_3, default_value = 1, source = SERIAL_TIMEOUT)
+        dpg.add_text('Timeout (ms): ')
+        dpg.add_input_int( tag = 42_3, default_value = 150, source = SERIAL_TIMEOUT)
+        dpg.add_spacer( height = 3 )
+        
+        dpg.add_text('Slave Address (ID): ')
+        dpg.add_input_int( tag = 42_3_1, default_value = 0x12, source = SERIAL_SLAVE )
         dpg.add_spacer( height = 3 )
 
         dpg.add_button(label ='Iniciar conexão',              tag = 42_4 , callback = serial_try_to_connect      )
@@ -159,8 +168,8 @@ def init_atuador( windows : dict ):
             dpg.add_plot_axis  ( dpg.mvYAxis, label = 'Angulo [º]' , tag = 'y_axis_azi' )
             dpg.set_axis_limits( 'x_axis_azi',  0,   1 )
             dpg.set_axis_limits( 'y_axis_azi', -5, 375 )
-            dpg.add_line_series( [], [], tag = 44_1_1, label = 'Sensor Giro', parent = 'y_axis_azi' )
-            dpg.add_line_series( [], [], tag = 44_1_2, label = 'Azimute sol', parent = 'y_axis_azi' ) 
+            dpg.add_line_series( [], [], tag = 44_11, label = 'Sensor Giro', parent = 'y_axis_azi' )
+            dpg.add_line_series( [], [], tag = 44_12, label = 'Azimute sol', parent = 'y_axis_azi' ) 
  
     # Zenite / Altitude Draw 
     with dpg.window(label  = 'Zenite'     , tag = 45_0, width= 495, height= 330, pos = [970,25], no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True) as zenite_config_AT:
@@ -171,9 +180,9 @@ def init_atuador( windows : dict ):
             dpg.add_plot_axis( dpg.mvXAxis, label = 'Medições [n]', tag = 'x_axis_alt', time = True, no_tick_labels = True  )
             dpg.add_plot_axis( dpg.mvYAxis, label = 'Angulo [º]', tag = 'y_axis_alt' )
             dpg.set_axis_limits_auto( 'x_axis_alt')
-            dpg.set_axis_limits( 'y_axis_alt', -5, 370 )
-            dpg.add_line_series( [], [], tag = 45_1_1, label = 'Sensor Elevação', parent = 'y_axis_alt' )
-            dpg.add_line_series( [], [], tag = 45_1_2, label = 'Zenite sol', parent = 'y_axis_alt' ) 
+            dpg.set_axis_limits( 'y_axis_alt', -5, 95 )
+            dpg.add_line_series( [], [], tag = 45_11, label = 'Sensor Elevação', parent = 'y_axis_alt' )
+            dpg.add_line_series( [], [], tag = 45_12, label = 'Zenite sol', parent = 'y_axis_alt' ) 
         
     # General Draw 
     with dpg.window( label = 'Draw_Window', tag = 46_0, width= 995, height= 480, pos = [470,360], no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True) as draw_tracker_AT:
@@ -205,42 +214,42 @@ def init_atuador( windows : dict ):
                 with dpg.child_window( tag = 46_11_10, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
                     with dpg.child_window ( tag = 46_11_111, width = -1, height = 37 ):
                         with dpg.group    ( tag = 46_11_112, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_113, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.AUTOMATIC ) )
+                            dpg.add_button( tag = 46_11_113, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_AUTOMATIC ) )
                             dpg.add_text  ( tag = 46_11_114, default_value = 'Estado AUTOMÁTICO (A)')  
                         with dpg.tooltip  ( tag = 46_11_115, parent = dpg.last_item() ): 
                             dpg.add_text  ( tag = 46_11_116, default_value = 'Entra no estado de operação automático' )
                     
                     with dpg.child_window ( tag = 46_11_121, width = -1, height = 37 ): 
                         with dpg.group    ( tag = 46_11_122, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_123, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.MANUAL ))
+                            dpg.add_button( tag = 46_11_123, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_MANUAL ))
                             dpg.add_text  ( tag = 46_11_124, default_value = 'Estado MANUAL (L)')  
                         with dpg.tooltip  ( tag = 46_11_125, parent = dpg.last_item() ): 
                             dpg.add_text  ( tag = 46_11_126, default_value = 'O Tracker passa a ser acionado pelo movimento manual dos Levers\npresos ao próprio Tracker.' )
                 
                     with dpg.child_window ( tag = 46_11_131, width = -1, height = 37 ):
                         with dpg.group    ( tag = 46_11_132, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_133, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.DEMO ))
+                            dpg.add_button( tag = 46_11_133, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_DEMO ))
                             dpg.add_text  ( tag = 46_11_134, default_value = 'Estado DEMO (D)')
                         with dpg.tooltip  ( tag = 46_11_135, parent = dpg.last_item() ): 
                             dpg.add_text  ( tag = 46_11_136, default_value = 'Entra no modo de demonstração de movimento.\nO tracker inicia o movimento começando pelo inicio do dia!' )
                     
                     with dpg.child_window ( tag = 46_11_141, width = -1, height = 37 ):
                         with dpg.group    ( tag = 46_11_142, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_143, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.AUTOMATIC ))
-                            dpg.add_text  ( tag = 46_11_144, default_value = 'Estado PROCESS (C)')
+                            dpg.add_button( tag = 46_11_143, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_REMOTE ))
+                            dpg.add_text  ( tag = 46_11_144, default_value = 'Estado REMOTE (C)')
                         with dpg.tooltip  ( tag = 46_11_145, parent = dpg.last_item() ): 
                             dpg.add_text  ( tag = 46_11_146, default_value = 'Volta para o estado de operação definido anteriormente.\nSó irá funcionar caso o Tracker tenha entrado em algum estado de \noperação diferente do atuomático ou remoto.' )
                     
                     with dpg.child_window ( tag = 46_11_151, width = -1, height = 37 ):
                         with dpg.group    ( tag = 46_11_152, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_153, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.IDLE ))
+                            dpg.add_button( tag = 46_11_153, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_IDLE ))
                             dpg.add_text  ( tag = 46_11_154, default_value = 'Estado IDLE (S)')
                         with dpg.tooltip  ( tag = 46_11_155, parent = dpg.last_item() ):
                             dpg.add_text  ( tag = 46_11_156, default_value = 'Coloca o Tracker em modo de espera. Ele não muda nenhum estado de operação, apenas entra em loop' )
                     
                     with dpg.child_window ( tag = 46_11_161, width = -1, height = 37 ):
                         with dpg.group    ( tag = 46_11_162, horizontal = True ): 
-                            dpg.add_button( tag = 46_11_163, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.RESET  ))
+                            dpg.add_button( tag = 46_11_163, label='send', callback = lambda s, d, u :  COMP.write_holdings( COMP.HR_STATE, COMP.PICO_RESET  ))
                             dpg.add_text  ( tag = 46_11_164, default_value = 'Estado RESET (R)')
                         with dpg.tooltip  ( tag = 46_11_165, parent = dpg.last_item() ):
                             dpg.add_text  ( tag = 46_11_166, default_value = 'O Tracker irá dar reboot!' )
@@ -371,7 +380,17 @@ def init_atuador( windows : dict ):
                 # DIAGNÓSTICO 
                 with dpg.child_window( tag = 46_11_50, width = dpg.get_item_width(46_1_0), autosize_y = True, autosize_x = True, border = True ):
                     def get_diagnosis( sender, data, user ):
-                        print( 'implementar o get_diagnosiss') 
+                            dpg.set_value(  SPG     , COMP.read_input_float( COMP.INPUT_SENS_GIR ) )
+                            dpg.set_value(  SPE     , COMP.read_input_float( COMP.INPUT_SENS_ELE ) )
+                            dpg.set_value(  AZIMUTE , COMP.read_input_float( COMP.INPUT_AZIMUTE  ) )
+                            dpg.set_value(  ALTITUDE, COMP.read_input_float( COMP.INPUT_ALTITUDE ) )
+                            dpg.set_value(  YEAR    , COMP.read_inputs     ( COMP.INPUT_YEAR     ) )
+                            dpg.set_value(  MONTH   , COMP.read_inputs     ( COMP.INPUT_MONTH    ) )
+                            dpg.set_value(  DAY     , COMP.read_inputs     ( COMP.INPUT_DAY      ) )
+                            dpg.set_value(  HOUR    , COMP.read_inputs     ( COMP.INPUT_HOUR     ) )
+                            dpg.set_value(  MINUTE  , COMP.read_inputs     ( COMP.INPUT_MINUTE   ) )
+                            dpg.set_value(  SECOND  , COMP.read_inputs     ( COMP.INPUT_SECOND   ) )
+
                     with dpg.child_window ( tag = 46_11_511, width = -1, height = 37 ): 
                         with dpg.group    ( tag = 46_11_512, horizontal = True ):    
                             dpg.add_button( tag = 46_11_513, label = 'send', callback = get_diagnosis, user_data = 'INITPA')
@@ -457,6 +476,5 @@ def resize_atuador():
     dpg.configure_item( 42_0, width = cw*455, height = ch*298, pos = [cw*10 , ch*25 ] ) #[455, 330] -> Serial
 
 def render_atuador() : 
-    #serial_verify_connection()
-    #serial_atualize_actuator_cmd()
-    pass 
+    serial_verify_connection()
+    serial_atualize_actuator_cmd()

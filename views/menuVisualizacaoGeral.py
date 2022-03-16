@@ -133,7 +133,7 @@ def init_visualizacaoGeral( windows : dict ):
         with dpg.group( horizontal = True ): 
             with dpg.plot( tag = 2_2_1_0, label = 'Azimute do dia', height = 312, width = 478, anti_aliased = True ): 
                 dpg.add_plot_legend()
-                dpg.add_plot_axis( dpg.mvXAxis, label = 'Hora [h]'  , tag = 2_2_1_1, parent = 2_2_1_0, time = True ) # X
+                dpg.add_plot_axis( dpg.mvXAxis, label = 'Hora [h]'  , tag = 2_2_1_1, parent = 2_2_1_0, time = True, no_tick_labels = True ) # X
                 dpg.add_plot_axis( dpg.mvYAxis, label = 'Angulo [º]', tag = 2_2_1_2, parent = 2_2_1_0 ) # Y 
                 dpg.set_axis_limits_auto( 2_2_1_1 )
                 dpg.set_axis_limits     ( 2_2_1_2, -5, 370 )
@@ -141,7 +141,7 @@ def init_visualizacaoGeral( windows : dict ):
                 dpg.add_scatter_series  ( [], [], tag = 2_2_1_4, label = 'Ponto atual', parent = 2_2_1_2 ) 
        
             with dpg.plot( tag = 2_2_2_0, label = 'Altitude do dia', height = 312, width = 478, anti_aliased = True ): 
-                dpg.add_plot_axis( dpg.mvXAxis, label = 'Hora [h]'  , tag = 2_2_2_1, parent = 2_2_2_0, time = True ) # X
+                dpg.add_plot_axis( dpg.mvXAxis, label = 'Hora [h]'  , tag = 2_2_2_1, parent = 2_2_2_0, time = True, no_tick_labels = True ) # X
                 dpg.add_plot_axis( dpg.mvYAxis, label = 'Angulo [º]', tag = 2_2_2_2, parent = 2_2_2_0 ) # Y 
                 dpg.set_axis_limits_auto( 2_2_2_1 )
                 dpg.set_axis_limits     ( 2_2_2_2, -5, 100 )
@@ -160,7 +160,7 @@ def init_visualizacaoGeral( windows : dict ):
         with dpg.child_window( tag = 23_00, autosize_x = True, height = 170, menubar = True):
             with dpg.menu_bar( tag = 23_01, label = 'menubar para datetime',):
                 dpg.add_menu_item( tag = 23_02, label = 'Hora automática', callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, False), shortcut = 'A data e hora de calculo é definida automaticamente de acordo com a hora do controlador local')
-                dpg.add_menu_item( tag = 23_03, label = 'Hora manual'    , callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, True) , shortcut = 'A data e hora de calculo é definida pela entrada do operador no supervisório' )
+                dpg.add_menu_item( tag = 23_03, label = 'Hora manual'    , callback = lambda s, d, u : dpg.set_value(HORA_MANUAL, True ), shortcut = 'A data e hora de calculo é definida pela entrada do operador no supervisório' )
 
             with dpg.child_window( tag = 23_10):
                 #Informações gerais do sistema - Automático 
@@ -181,7 +181,7 @@ def init_visualizacaoGeral( windows : dict ):
             dpg.hide_item( 23_20 ) if dpg.get_value(HORA_MANUAL) == False else dpg.hide_item( 2_3_1_0 )
         
         dpg.add_spacer( height = 5 )
-        with dpg.child_window( tag = 2_3_3_0, autosize_x = True, autosize_y = True ): 
+        with dpg.child_window( tag = 23_30, autosize_x = True, autosize_y = True ): 
             # Definições de longitude e latitude local
             with dpg.child_window  ( height = 90 ):
                 dpg.add_text       ( default_value = 'Definições de longitude e latitude local')
@@ -193,23 +193,23 @@ def init_visualizacaoGeral( windows : dict ):
             with dpg.child_window( height = 150 ): 
                 # Informações do sol 
                 dpg.add_text       ( default_value = 'Informacoes do sol')
-                dpg.add_drag_float ( label = 'Azimute'      , tag = 23_12, format='%4.2f', speed=1, no_input= True, source = AZIMUTE )
+                dpg.add_drag_float ( label = 'Azimute'      , tag = 23_12, format = '%4.2f', speed = 1, no_input = True, source = AZIMUTE )
                 dpg.add_spacer     ( )
-                dpg.add_drag_float ( label = 'Altitude'     , tag = 23_13, format='%4.2f', speed=1, no_input= True, source = ZENITE )
+                dpg.add_drag_float ( label = 'Altitude'     , tag = 23_13, format = '%4.2f', speed = 1, no_input = True, source = ZENITE  )
                 dpg.add_spacer     ( )
-                dpg.add_drag_float ( label = 'Elevação (m)' , tag = 23_14, format='%4.0f', speed=1, no_input= True, source = ALTITUDE )
+                dpg.add_drag_float ( label = 'Elevação (m)' , tag = 23_14, format = '%4.0f', speed = 1, no_input = True, source = ALTITUDE )
                 dpg.add_spacer     ( )
-                dpg.add_drag_floatx( label = 'Horas de sol' , tag = 23_15, size = 3, format='%.0f', no_input= True )
+                dpg.add_drag_floatx( label = 'Horas de sol' , tag = 23_15, size = 3, format = '%.0f', no_input = True )
             
             dpg.add_spacer( height = 5 )
             with dpg.child_window( height = 200 ):
                 # Posições de interesse
                 dpg.add_text       ( default_value = "Posicoes de interesse", )
                 dpg.add_text       ( default_value = 'Nascer do sol (hh/mm/ss)')
-                dpg.add_drag_floatx( tag = 2_3_16, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNRISE     , data.extend([0]))  )
+                dpg.add_drag_floatx( tag = 2_3_16, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNRISE  , data.extend([0]))  )
                 dpg.add_spacer     ( )
                 dpg.add_text       ( default_value = 'Culminante (hh/mm/ss)'   )
-                dpg.add_drag_floatx( tag = 2_3_17, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNSET      , data.extend([0]))  )
+                dpg.add_drag_floatx( tag = 2_3_17, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_SUNSET   , data.extend([0]))  )
                 dpg.add_spacer     ( )
                 dpg.add_text       ( default_value = 'Por do sol (hh/mm/ss)'   )
                 dpg.add_drag_floatx( tag = 2_3_18, size = 3, format='%.0f', speed=1, no_input= True, callback = lambda sender, data, user : dpg.set_value( H_CULMINANT, data.extend([0]))  )

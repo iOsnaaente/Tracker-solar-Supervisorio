@@ -120,8 +120,9 @@ def init_rednodecom( windows : dict ):
     with dpg.window( tag = 61_10, width = -1, height = -1, pos = [10,25]     , no_resize=True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True ) as winRed: 
         windows['Rednode comunicacao'].append( winRed )
         header = add_image_loaded( PATH + "\\utils\\img\\nodeRed.PNG" )
+        print( PATH )
         dpg.add_drawlist( tag = 61_11, width  = 100  , height = 100  )
-        dpg.draw_image  ( tag = 61_12, parent = 61_11, texture_tag = header, pmin = (0,0), pmax = (1,1) )
+        dpg.draw_image  ( tag = 61_12, parent = 61_11, texture_tag = header, pmin = (-20,-20), pmax = (100,100) )
 
     # CONFIGURAÇÔES
     with dpg.window( tag = 62_10, width = -1, height = -1, pos = [10, 0], no_resize = True, no_move = True, no_collapse = True, no_close = True, no_title_bar = True   ) as winConfig: 

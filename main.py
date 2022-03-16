@@ -6,6 +6,7 @@ __version__ = "1.0.1"
 
 # INICIO DO CONTEXTO DPG 
 import dearpygui.dearpygui as dpg
+import threading
 
 # INICIO DO CONTEXTO 
 dpg.create_context()
@@ -112,8 +113,9 @@ dpg.maximize_viewport           (                             )
 
 # SETA A JANELA INICIAL 
 change_menu  ( None, None, 'Inicio' )
-dpg.set_frame_callback( 3 , callback = change_menu, user_data = 'Atuadores' )
+dpg.set_frame_callback( 3 , callback = change_menu, user_data = 'Inicio' )
 
+flux_modbus = threading.Lock() 
 
 # START OF DPG VIEW 
 dpg.show_viewport  ( )
@@ -125,7 +127,22 @@ while dpg.is_dearpygui_running():
     # COM 60FPS TEM-SE 0.01667s PARA DAR 1 FRAME
     # A CADA 60 FRAME SE PASSAM 1 SEGUNDO 
     if dpg.get_frame_count() % 60 == 0: 
-        if not dpg.get_value( HORA_MANUAL ): 
+        if serial_comp_is_open():
+            PICO_STATE = COMP.read_holdings( COMP.HR_STATE )
+            dpg.set_value( STATE, PICO_STATE )
+        else: 
+            PICO_STATE = -1 
+
+        STATE_DATETIME = dpg.get_value( HORA_MANUAL )
+        if STATE_DATETIME == True: 
+            if PICO_STATE == COMP.PICO_MANUAL:
+                time.sleep(0.005)
+                data = [] 
+                for val in dpg.get_value( 46_11_1 )[:3]: data.append( int(val) )
+                for val in dpg.get_value( 46_11_2 )[:3]: data.append( int(val) )
+                data[0] = data[0] - 2000 if data[0] > 2000 else data[0]
+                COMP.write_holdings( COMP.HR_YEAR, data )           
+        else: 
             SUN_DATA.set_date( dt.datetime.utcnow() )
             dpg.set_value( ZENITE     , math.degrees(SUN_DATA.alt) ) 
             dpg.set_value( AZIMUTE    , math.degrees(SUN_DATA.azi) )
@@ -137,29 +154,31 @@ while dpg.is_dearpygui_running():
             dpg.set_value( SECOND     , SUN_DATA.second            )
             dpg.set_value( TOT_SECONDS, SUN_DATA.total_seconds     )
             dpg.set_value( JULIANSDAY , SUN_DATA.dia_juliano       )
-
-        if dpg.get_frame_count() % 600 == 0: 
-            if serial_comp_is_open():
-                if dpg.get_value( WRONG_DATETIME ):
-                    datetime = dt.datetime.now()
-                    status = COMP.write_holdings( COMP.HR_YEAR, [datetime.year, datetime.month, datetime.day, datetime.hour, datetime.minute, datetime.second ] )   
-                    if status == True: 
-                        dpg.set_value( HORA_MANUAL, False ) 
-                        dpg.set_value( WRONG_DATETIME, False )
-
-        # PARA DAR 3.600 FRAMES TEM-SE 1 MINUTO  
-        if dpg.get_frame_count() % 3_600 == 0:
-            if serial_comp_is_open():
-                if dpg.get_value( STATE ) == 'REMOTE':
-                    azi, alt = dpg.get_value(AZIMUTE), dpg.get_value(ZENITE)
-                    COMP.write_holdings( COMP.HR_AZIMUTE, [azi, alt] )   
-                serial_update_values( )
+            
+            if PICO_STATE == COMP.PICO_AUTOMATIC: 
+                # PDT = PICO DATE TIME 
+                PDT = COMP.read_inputs( COMP.INPUT_YEAR, 6 )
+                if type( PDT ) == list : 
+                    # RDT -> REAL DATE TIME 
+                    RDT  = dt.datetime.now()
+                    RDT  = [RDT.year - 2000, RDT.month, RDT.day, RDT.hour, RDT.minute, RDT.second ]
+                    SYNC = True 
+                    for R, P in zip(PDT, RDT): 
+                        SYNC = ( R == P )
+                        if not SYNC:
+                            status_date  = COMP.write_holdings( COMP.HR_YEAR            , RDT  )   
+                            status_force = COMP.write_coils   ( COMP.COIL_FORCE_DATETIME, True )
         
-
+        if PICO_STATE == COMP.PICO_REMOTE:
+            azi, alt = dpg.get_value( AZIMUTE ), dpg.get_value( ZENITE )
+            COMP.write_holdings ( COMP.HR_AZIMUTE , float(azi) )
+            COMP.write_holdings ( COMP.HR_ALTITUDE, float(alt) )
+        
     # Pega as posições se estiver conectado
     if dpg.get_frame_count() % 5 == 0:
         if serial_comp_is_open():
             serial_att_plots()
+
 
 # CLOSE DPG 
 dpg.destroy_context() 
